@@ -43,9 +43,34 @@
     <div class="table-container" data-animate="slide-up" style="--animate-delay: 200ms;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2 style="margin: 0;">Company Users</h2>
-            <button onclick="showInviteModal()" class="btn btn-primary btn-elevated">
-                <i class="fas fa-user-plus"></i> Invite User
-            </button>
+            <div class="dropdown-container" style="position: relative;">
+                <button onclick="toggleAddUserDropdown()" class="btn btn-primary btn-elevated">
+                    <i class="fas fa-user-plus"></i> Add User <i class="fas fa-chevron-down" style="margin-left: 0.5rem;"></i>
+                </button>
+                <div id="addUserDropdown" class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); box-shadow: var(--shadow-soft); min-width: 300px; z-index: 100;">
+                    <div style="padding: 1rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Add User to Company</h4>
+                        <select id="quickAddUserSelect" class="form-select" style="width: 100%; margin-bottom: 0.75rem;">
+                            <option value="">Loading users...</option>
+                        </select>
+                        <select id="quickAddUserRole" class="form-select" style="width: 100%; margin-bottom: 0.75rem;">
+                            <option value="Employee">Employee</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Director">Director</option>
+                            <option value="CFO">CFO</option>
+                        </select>
+                        <button onclick="quickAddUser()" class="btn btn-primary btn-sm" style="width: 100%;">
+                            <i class="fas fa-plus"></i> Add Selected User
+                        </button>
+                        <div style="border-top: 1px solid var(--border-subtle); margin: 1rem 0; padding-top: 1rem;">
+                            <button onclick="showInviteModal()" class="btn btn-outline btn-sm" style="width: 100%;">
+                                <i class="fas fa-envelope"></i> Invite New User by Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <table class="data-table" id="usersTable">
             <thead>
@@ -141,6 +166,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let users = [];
 let expenses = [];
+let allUsers = [];
+
+function toggleAddUserDropdown() {
+    const dropdown = document.getElementById('addUserDropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    if (dropdown.style.display === 'block') {
+        loadAvailableUsers();
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('addUserDropdown');
+    const button = e.target.closest('.dropdown-container');
+    if (!button && dropdown && dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+    }
+});
+
+async function loadAvailableUsers() {
+    try {
+        const response = await fetchWithAuth('/api/users/all');
+        if (response.ok) {
+            allUsers = await response.json();
+            updateQuickAddUserSelect();
+        }
+    } catch (error) {
+        console.error('Error loading available users:', error);
+    }
+}
+
+function updateQuickAddUserSelect() {
+    const select = document.getElementById('quickAddUserSelect');
+    if (!select) return;
+    
+    if (allUsers.length === 0) {
+        select.innerHTML = '<option value="">No users available</option>';
+        return;
+    }
+    
+    // Filter out users already in the current company
+    const currentCompanyUserEmails = users.map(u => u.email);
+    const availableUsers = allUsers.filter(u => !currentCompanyUserEmails.includes(u.email));
+    
+    if (availableUsers.length === 0) {
+        select.innerHTML = '<option value="">All users already in company</option>';
+        return;
+    }
+    
+    select.innerHTML = `
+        <option value="">Select a user to add</option>
+        ${availableUsers.map(user => `
+            <option value="${user.email}">
+                ${user.full_name} - ${user.email}
+            </option>
+        `).join('')}
+    `;
+}
+
+async function quickAddUser() {
+    const email = document.getElementById('quickAddUserSelect').value;
+    const role = document.getElementById('quickAddUserRole').value;
+    
+    if (!email) {
+        showToast('Please select a user', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetchWithAuth('/api/company/add-user', {
+            method: 'POST',
+            body: JSON.stringify({ email, role })
+        });
+        
+        if (response.ok) {
+            showToast('User added successfully!', 'success');
+            document.getElementById('addUserDropdown').style.display = 'none';
+            loadUsers();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to add user', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding user:', error);
+        showToast('Failed to add user', 'error');
+    }
+}
 
 async function loadUsers() {
     try {

@@ -137,3 +137,47 @@ def check_company_admin():
     ).first() is not None
     
     return jsonify({'has_admin': admin_exists})
+
+@company_bp.route('/add-user', methods=['POST'])
+@admin_required
+def add_existing_user_to_company(current_user):
+    """Add an existing user to the company"""
+    data = request.get_json()
+    
+    if not data.get('email') or not data.get('role'):
+        return jsonify({'error': 'Email and role required'}), 400
+    
+    # Validate role
+    try:
+        role = UserRole[data['role'].upper()]
+    except KeyError:
+        return jsonify({'error': 'Invalid role'}), 400
+    
+    # Find the user
+    user = User.query.filter_by(email=data['email']).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Check if user is already in this company
+    if user.company_id == current_user.company_id:
+        return jsonify({'error': 'User already in company'}), 400
+    
+    # Update user's company and role
+    user.company_id = current_user.company_id
+    user.role = role
+    
+    # Send notification to the user
+    from app.services.notification_service import NotificationService
+    NotificationService.create_notification(
+        user_id=user.id,
+        title="Added to Company",
+        message=f"You have been added to {current_user.company.name} as {role.value}",
+        link="/dashboard"
+    )
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'User added to company successfully',
+        'user': user.to_dict()
+    }), 201
