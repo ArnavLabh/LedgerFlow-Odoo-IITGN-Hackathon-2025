@@ -179,8 +179,10 @@ let pendingInvites = [];
 async function loadUsers() {
     try {
         const response = await fetchWithAuth('/api/company/users');
-        users = await response.json();
-        updateApproverSelects();
+        if (response.ok) {
+            users = await response.json();
+            updateApproverSelects();
+        }
     } catch (error) {
         console.error('Error loading users:', error);
     }
