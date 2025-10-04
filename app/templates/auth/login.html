@@ -85,10 +85,8 @@ function setTheme(theme) {
 function initTheme() {
     if (storedTheme) {
         setTheme(storedTheme);
-    } else if (prefersDark.matches) {
-        setTheme('dark');
     } else {
-        setTheme('light');
+        setTheme('dark'); // Default to dark mode
     }
     updateToggleState();
 }

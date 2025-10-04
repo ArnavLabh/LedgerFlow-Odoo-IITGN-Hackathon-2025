@@ -60,6 +60,22 @@
                             <span class="form-focus"></span>
                         </div>
                     </div>
+                    
+                    <div class="form-field" data-animate="slide-up" data-delay="115">
+                        <label for="role" class="form-label"><i class="fas fa-user-tag"></i> Role</label>
+                        <div class="form-control">
+                            <select id="role" class="form-select" required>
+                                <option value="">Select your role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Director">Director</option>
+                                <option value="CFO">CFO</option>
+                                <option value="Employee">Employee</option>
+                            </select>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
                     {% endif %}
 
                     <div class="form-field" data-animate="slide-up" data-delay="125">
@@ -123,10 +139,8 @@ function setTheme(theme) {
 function initTheme() {
     if (storedTheme) {
         setTheme(storedTheme);
-    } else if (prefersDark.matches) {
-        setTheme('dark');
     } else {
-        setTheme('light');
+        setTheme('dark'); // Default to dark mode
     }
     updateToggleState();
 }
@@ -196,6 +210,31 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
         data.invite_token = inviteToken.value;
     } else {
         data.company_name = document.getElementById('companyName').value.trim();
+        data.role = document.getElementById('role').value;
+        
+        // Check if company already has an admin if role is Admin
+        if (data.role === 'Admin') {
+            try {
+                const checkResponse = await fetch('/api/companies/check-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ company_name: data.company_name })
+                });
+                
+                const checkResult = await checkResponse.json();
+                if (checkResult.has_admin) {
+                    if (!confirm(`An admin already exists for "${data.company_name}". Would you like to choose a different role like Employee, Manager, or CFO instead?`)) {
+                        return;
+                    }
+                    // Show role selector again with Admin disabled
+                    document.getElementById('role').querySelector('option[value="Admin"]').disabled = true;
+                    showToast('Please select a different role as Admin already exists for this company', 'warning');
+                    return;
+                }
+            } catch (error) {
+                console.error('Failed to check admin status:', error);
+            }
+        }
     }
 
     try {

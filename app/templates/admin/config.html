@@ -30,6 +30,73 @@
     </div>
     
     <div class="expense-form-container" data-animate="slide-up" style="--animate-delay: 200ms; margin-top: 2rem;">
+        <h2>Invite Users to Company</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+            Invite existing users or create new user accounts for your company
+        </p>
+        
+        <form id="inviteForm" class="expense-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="inviteType"><i class="fas fa-user-plus"></i> Invitation Type</label>
+                    <select id="inviteType" class="form-select" onchange="handleInviteTypeChange()" required>
+                        <option value="">Select invitation type</option>
+                        <option value="existing">Invite Existing User</option>
+                        <option value="new">Create New User Invitation</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="existingUserFields" class="form-row" style="display: none;">
+                <div class="form-group">
+                    <label for="existingUserSelect"><i class="fas fa-users"></i> Select User</label>
+                    <select id="existingUserSelect" class="form-select">
+                        <option value="">Loading users...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="existingUserRole"><i class="fas fa-user-tag"></i> Role</label>
+                    <select id="existingUserRole" class="form-select">
+                        <option value="Employee">Employee</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Director">Director</option>
+                        <option value="CFO">CFO</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="newUserFields" class="form-row" style="display: none;">
+                <div class="form-group">
+                    <label for="newUserEmail"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="newUserEmail" class="form-input" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="newUserRole"><i class="fas fa-user-tag"></i> Role</label>
+                    <select id="newUserRole" class="form-select">
+                        <option value="Employee">Employee</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Director">Director</option>
+                        <option value="CFO">CFO</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group" id="inviteActions" style="display: none;">
+                <button type="submit" class="btn btn-primary btn-elevated">
+                    <i class="fas fa-paper-plane"></i> Send Invitation
+                </button>
+            </div>
+        </form>
+        
+        <div id="pendingInvitesList" style="margin-top: 2rem;">
+            <h3>Pending Invitations</h3>
+            <div id="invitesContainer"></div>
+        </div>
+    </div>
+    
+    <div class="expense-form-container" data-animate="slide-up" style="--animate-delay: 300ms; margin-top: 2rem;">
         <h2>Conditional Approval Rules</h2>
         <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
             Set up rules for auto-approval based on conditions
@@ -106,6 +173,8 @@ let approvers = [];
 let rules = [];
 let users = [];
 let nextSequence = 1;
+let allUsers = [];
+let pendingInvites = [];
 
 async function loadUsers() {
     try {
@@ -114,6 +183,30 @@ async function loadUsers() {
         updateApproverSelects();
     } catch (error) {
         console.error('Error loading users:', error);
+    }
+}
+
+async function loadAllUsers() {
+    try {
+        const response = await fetchWithAuth('/api/users/all');
+        if (response.ok) {
+            allUsers = await response.json();
+            updateExistingUserSelect();
+        }
+    } catch (error) {
+        console.error('Error loading all users:', error);
+    }
+}
+
+async function loadPendingInvites() {
+    try {
+        const response = await fetchWithAuth('/api/company/invites');
+        if (response.ok) {
+            pendingInvites = await response.json();
+            renderPendingInvites();
+        }
+    } catch (error) {
+        console.error('Error loading pending invites:', error);
     }
 }
 
@@ -282,6 +375,83 @@ function updateApproverSelects() {
         users.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
 }
 
+function updateExistingUserSelect() {
+    const select = document.getElementById('existingUserSelect');
+    // Filter out users already in the company
+    const availableUsers = allUsers.filter(u => !users.some(cu => cu.id === u.id));
+    
+    select.innerHTML = '<option value="">Select a user to invite</option>' + 
+        availableUsers.map(u => `<option value="${u.email}">${u.full_name} (${u.email})</option>`).join('');
+}
+
+function handleInviteTypeChange() {
+    const type = document.getElementById('inviteType').value;
+    const existingFields = document.getElementById('existingUserFields');
+    const newFields = document.getElementById('newUserFields');
+    const actions = document.getElementById('inviteActions');
+    
+    existingFields.style.display = type === 'existing' ? 'flex' : 'none';
+    newFields.style.display = type === 'new' ? 'flex' : 'none';
+    actions.style.display = type ? 'block' : 'none';
+}
+
+function renderPendingInvites() {
+    const container = document.getElementById('invitesContainer');
+    
+    if (pendingInvites.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">No pending invitations</p>';
+        return;
+    }
+    
+    container.innerHTML = pendingInvites.map(invite => `
+        <div class="config-item" style="margin-bottom: 1rem;">
+            <div style="flex: 1;">
+                <div style="font-weight: 600;">${invite.email}</div>
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                    Role: ${invite.role} | Expires: ${new Date(invite.expires_at).toLocaleDateString()}
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-sm btn-outline" onclick="copyInviteLink('${invite.token}')">
+                    <i class="fas fa-copy"></i> Copy Link
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="cancelInvite('${invite.id}')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function copyInviteLink(token) {
+    const link = `${window.location.origin}/signup?token=${token}`;
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('Invite link copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy link', 'error');
+    });
+}
+
+async function cancelInvite(inviteId) {
+    if (!confirm('Are you sure you want to cancel this invitation?')) return;
+    
+    try {
+        const response = await fetchWithAuth(`/api/company/invites/${inviteId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showToast('Invitation cancelled', 'success');
+            loadPendingInvites();
+        } else {
+            showToast('Failed to cancel invitation', 'error');
+        }
+    } catch (error) {
+        console.error('Error cancelling invite:', error);
+        showToast('Failed to cancel invitation', 'error');
+    }
+}
+
 document.getElementById('ruleForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -336,7 +506,58 @@ async function deleteRule(ruleId) {
     }
 }
 
+// Add invitation form handler
+document.getElementById('inviteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const type = document.getElementById('inviteType').value;
+    let email, role;
+    
+    if (type === 'existing') {
+        email = document.getElementById('existingUserSelect').value;
+        role = document.getElementById('existingUserRole').value;
+    } else if (type === 'new') {
+        email = document.getElementById('newUserEmail').value;
+        role = document.getElementById('newUserRole').value;
+    }
+    
+    if (!email || !role) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetchWithAuth('/api/company/invite', {
+            method: 'POST',
+            body: JSON.stringify({ email, role })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showToast(`Invitation sent to ${email}!`, 'success');
+            
+            // Show invite link
+            copyInviteLink(result.invite.token);
+            
+            // Reset form
+            document.getElementById('inviteForm').reset();
+            handleInviteTypeChange();
+            
+            // Reload invites
+            loadPendingInvites();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to send invitation', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending invitation:', error);
+        showToast('Failed to send invitation', 'error');
+    }
+});
+
 loadUsers();
+loadAllUsers();
+loadPendingInvites();
 loadApproverAssignments();
 loadRules();
 </script>

@@ -65,6 +65,12 @@
                 </button>
                 
                 <!-- User Menu -->
+                <!-- Company Info -->
+                <div class="company-info">
+                    <span class="company-name">{{ user.company.name if user.company else 'No Company' }}</span>
+                </div>
+                
+                <!-- User Menu -->
                 <div class="user-menu">
                     <button class="user-btn" onclick="toggleUserMenu()">
                         <i class="fas fa-user-circle"></i> {{ user.full_name }}
@@ -74,7 +80,11 @@
                         <div class="user-info">
                             <p class="user-name">{{ user.full_name }}</p>
                             <p class="user-role">{{ user.role }}</p>
+                            <p class="user-company">{{ user.company.name if user.company else 'No Company' }}</p>
                         </div>
+                        <a href="/profile" class="profile-btn">
+                            <i class="fas fa-user-edit"></i> Profile
+                        </a>
                         <button onclick="logout()" class="logout-btn">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </button>
@@ -109,7 +119,7 @@
         
         // Load saved theme
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('theme') || 'dark'; // Default to dark mode
             const toggle = document.querySelector('.theme-toggle');
             document.documentElement.setAttribute('data-theme', savedTheme);
             if (savedTheme === 'dark' && toggle) {

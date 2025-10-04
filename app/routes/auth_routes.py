@@ -49,21 +49,44 @@ def signup():
             invite.accepted = True
             db.session.commit()
         else:
-            # Create new company and admin user
+            # Create new company and user with specified role
             company_name = data.get('company_name', f"{data['full_name']}'s Company")
+            role_str = data.get('role', 'Admin')
             
-            company = Company(
-                name=company_name,
-                default_currency='INR'
-            )
-            db.session.add(company)
-            db.session.flush()  # Get company ID
+            # Validate role
+            try:
+                role = UserRole[role_str.upper()]
+            except KeyError:
+                return jsonify({'error': 'Invalid role specified'}), 400
+            
+            # Check if company exists and has admin (if trying to register as admin)
+            existing_company = Company.query.filter_by(name=company_name).first()
+            if existing_company and role == UserRole.ADMIN:
+                admin_exists = User.query.filter_by(
+                    company_id=existing_company.id,
+                    role=UserRole.ADMIN,
+                    is_active=True
+                ).first()
+                
+                if admin_exists:
+                    return jsonify({'error': 'Admin already exists for this company. Please choose a different role.'}), 400
+            
+            # Create or get company
+            if existing_company:
+                company = existing_company
+            else:
+                company = Company(
+                    name=company_name,
+                    default_currency='INR'
+                )
+                db.session.add(company)
+                db.session.flush()  # Get company ID
             
             user = User(
                 email=data['email'],
                 password_hash=hash_password(data['password']),
                 full_name=data['full_name'],
-                role=UserRole.ADMIN,
+                role=role,
                 company_id=company.id
             )
             db.session.add(user)

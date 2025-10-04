@@ -85,3 +85,55 @@ def get_invite(token):
         'role': invite.role.value,
         'company_name': invite.company.name
     })
+
+@company_bp.route('/invites', methods=['GET'])
+@admin_required
+def get_pending_invites(current_user):
+    """Get all pending invites for the company"""
+    invites = Invite.query.filter_by(
+        company_id=current_user.company_id,
+        accepted=False
+    ).filter(Invite.expires_at > datetime.utcnow()).all()
+    
+    return jsonify([invite.to_dict() for invite in invites])
+
+@company_bp.route('/invites/<invite_id>', methods=['DELETE'])
+@admin_required
+def cancel_invite(current_user, invite_id):
+    """Cancel an invitation"""
+    invite = Invite.query.filter_by(
+        id=invite_id,
+        company_id=current_user.company_id
+    ).first()
+    
+    if not invite:
+        return jsonify({'error': 'Invite not found'}), 404
+    
+    db.session.delete(invite)
+    db.session.commit()
+    
+    return jsonify({'message': 'Invite cancelled successfully'})
+
+@company_bp.route('/check-admin', methods=['POST'])
+def check_company_admin():
+    """Check if a company already has an admin"""
+    data = request.get_json()
+    company_name = data.get('company_name')
+    
+    if not company_name:
+        return jsonify({'error': 'Company name required'}), 400
+    
+    # Find company and check if it has an admin
+    from app.models import Company
+    company = Company.query.filter_by(name=company_name).first()
+    
+    if not company:
+        return jsonify({'has_admin': False})
+    
+    admin_exists = User.query.filter_by(
+        company_id=company.id,
+        role=UserRole.ADMIN,
+        is_active=True
+    ).first() is not None
+    
+    return jsonify({'has_admin': admin_exists})

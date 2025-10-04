@@ -76,11 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
 let isDraft = false;
 let isSubmitting = false;
 
-// Check authentication on page load
-if (!localStorage.getItem('access_token')) {
-    window.location.href = '/login';
-}
-
 // Set max date to today
 document.getElementById('dateIncurred').max = new Date().toISOString().split('T')[0];
 
@@ -93,14 +88,6 @@ async function saveDraft() {
 async function submitExpense() {
     if (isSubmitting) return;
     isSubmitting = true;
-    
-    // Check if user is logged in
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        showToast('Please log in to submit expenses', 'error');
-        window.location.href = '/login';
-        return;
-    }
     
     // Disable buttons
     const submitBtn = document.querySelector('button[type="submit"]');
@@ -142,8 +129,12 @@ async function submitExpense() {
         console.log('Creating expense with data:', data);
         
         // Create expense
-        const createResponse = await fetchWithAuth('/api/expenses', {
+        const createResponse = await fetch('/api/expenses', {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
             body: JSON.stringify(data)
         });
         
@@ -162,8 +153,9 @@ async function submitExpense() {
         if (!isDraft) {
             console.log('Submitting expense for approval:', expense.id);
             
-            const submitResponse = await fetchWithAuth(`/api/expenses/${expense.id}/submit`, {
-                method: 'POST'
+            const submitResponse = await fetch(`/api/expenses/${expense.id}/submit`, {
+                method: 'POST',
+                credentials: 'include'
             });
             
             console.log('Submit response status:', submitResponse.status);

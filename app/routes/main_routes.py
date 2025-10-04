@@ -5,11 +5,11 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    """Home page - redirect to dashboard or login"""
+    """Home page - hero page for non-authenticated, dashboard for authenticated"""
     user = get_current_user()
     if user:
         return redirect(url_for('main.dashboard'))
-    return redirect(url_for('main.login'))
+    return render_template('hero.html')
 
 @main_bp.route('/signup')
 def signup():
@@ -102,6 +102,14 @@ def notifications():
     if not user:
         return redirect(url_for('main.login'))
     return render_template('notifications/list.html', user=user)
+
+@main_bp.route('/profile')
+def profile():
+    """User profile page"""
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('main.login'))
+    return render_template('profile.html', user=user)
 
 @main_bp.route('/logout')
 def logout():

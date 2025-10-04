@@ -1,22 +1,15 @@
 // Global utilities and notification handling
 
-// Get access token from localStorage
+// Cookie-based authentication - no localStorage needed
 function getAccessToken() {
-    return localStorage.getItem('access_token');
+    // Tokens are handled by cookies, return null to force cookie-based requests
+    return null;
 }
 
-// Fetch with authentication
+// Fetch with authentication (cookie-based)
 async function fetchWithAuth(url, options = {}) {
-    const token = getAccessToken();
-    
-    if (!token) {
-        window.location.href = '/login';
-        throw new Error('No access token');
-    }
-    
     const defaultOptions = {
         headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
             ...options.headers
         },
@@ -26,23 +19,16 @@ async function fetchWithAuth(url, options = {}) {
     
     const response = await fetch(url, defaultOptions);
     
-    // Handle 401 - try to refresh token
+    // Handle 401 - redirect to login
     if (response.status === 401) {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-            // Retry the request with new token
-            defaultOptions.headers['Authorization'] = `Bearer ${getAccessToken()}`;
-            return fetch(url, defaultOptions);
-        } else {
-            window.location.href = '/login';
-            throw new Error('Authentication failed');
-        }
+        window.location.href = '/login';
+        throw new Error('Authentication failed');
     }
     
     return response;
 }
 
-// Refresh access token
+// Refresh access token (for cookie-based auth, this is handled server-side)
 async function refreshAccessToken() {
     try {
         const response = await fetch('/api/auth/refresh', {
@@ -50,13 +36,7 @@ async function refreshAccessToken() {
             credentials: 'include'
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            return true;
-        }
-        return false;
+        return response.ok;
     } catch (error) {
         console.error('Error refreshing token:', error);
         return false;
@@ -233,32 +213,24 @@ document.addEventListener('click', (e) => {
 // Logout
 async function logout() {
     try {
-        // Call logout API if token exists
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-        }
+        // Call logout API to clear server-side cookies
+        await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
     } catch (error) {
         console.error('Logout error:', error);
     }
     
-    // Clear local storage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    
-    // Redirect to login
+    // Redirect to login (server will clear cookies)
     window.location.href = '/login';
 }
 
 // Start polling when page loads (if user is logged in)
-if (getAccessToken() && document.getElementById('notificationBadge')) {
+if (document.getElementById('notificationBadge')) {
     startNotificationPolling();
 }
 

@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>My Profile</h1>
+            <p class="subtitle">Manage your account information</p>
+        </div>
+    </div>
+    
+    <div class="profile-container">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-info">
+                    <h2 id="displayName">{{ user.full_name }}</h2>
+                    <p id="displayRole">{{ user.role.value }}</p>
+                    <p id="displayCompany">{{ user.company.name if user.company else 'No Company' }}</p>
+                </div>
+            </div>
+            
+            <form id="profileForm" class="profile-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="full_name" class="form-input" value="{{ user.full_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-input" value="{{ user.email }}" readonly>
+                        <small class="form-hint">Email cannot be changed</small>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <input type="text" id="role" name="role" class="form-input" value="{{ user.role.value }}" readonly>
+                        <small class="form-hint">Role is managed by admin</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Company</label>
+                        <input type="text" id="company" name="company" class="form-input" value="{{ user.company.name if user.company else 'No Company' }}" readonly>
+                        <small class="form-hint">Company is managed by admin</small>
+                    </div>
+                </div>
+                
+                <div class="form-divider">
+                    <span>Change Password</span>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" name="current_password" class="form-input" placeholder="Enter current password">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="new_password" class="form-input" placeholder="Enter new password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirm_password" class="form-input" placeholder="Confirm new password">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="profile-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ user.created_at.strftime('%b %d, %Y') }}</h3>
+                    <p>Member Since</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="expenseCount">0</h3>
+                    <p>Expenses Submitted</p>
+                </div>
+            </div>
+            
+            {% if user.role.value in ['Manager', 'Finance', 'Director', 'CFO', 'Admin'] %}
+            <div class="stat-card">
+                <div class="stat-icon approved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="approvalCount">0</h3>
+                    <p>Approvals Given</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Load user stats
+async function loadUserStats() {
+    try {
+        const response = await fetch('/api/users/stats', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
+            document.getElementById('expenseCount').textContent = stats.expense_count || 0;
+            if (document.getElementById('approvalCount')) {
+                document.getElementById('approvalCount').textContent = stats.approval_count || 0;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load user stats:', error);
+    }
+}
+
+// Handle form submission
+document.getElementById('profileForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Validate passwords if provided
+    if (data.new_password || data.confirm_password || data.current_password) {
+        if (!data.current_password) {
+            showToast('Current password is required to change password', 'error');
+            return;
+        }
+        if (data.new_password !== data.confirm_password) {
+            showToast('New passwords do not match', 'error');
+            return;
+        }
+        if (data.new_password.length < 6) {
+            showToast('New password must be at least 6 characters', 'error');
+            return;
+        }
+    }
+    
+    try {
+        const response = await fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast('Profile updated successfully!', 'success');
+            // Update display name
+            document.getElementById('displayName').textContent = data.full_name;
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } else {
+            showToast(result.error || 'Failed to update profile', 'error');
+        }
+    } catch (error) {
+        showToast('Network error', 'error');
+    }
+});
+
+// Reset form
+function resetForm() {
+    document.getElementById('profileForm').reset();
+    document.getElementById('fullName').value = '{{ user.full_name }}';
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', loadUserStats);
+</script>
+{% endblock %}
