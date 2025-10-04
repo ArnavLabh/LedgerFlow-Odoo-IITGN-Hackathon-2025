@@ -184,7 +184,11 @@ def google_oauth_callback():
     }
     
     try:
+        current_app.logger.info(f'OAuth config check - Client ID: {current_app.config.get("GOOGLE_OAUTH_CLIENT_ID", "NOT SET")}')
+        current_app.logger.info(f'OAuth redirect URI: {current_app.config.get("OAUTH_REDIRECT_URI", "NOT SET")}')
         token_response = requests.post(token_url, data=token_data)
+        current_app.logger.info(f'Token response status: {token_response.status_code}')
+        current_app.logger.info(f'Token response text: {token_response.text}')
         token_response.raise_for_status()
         tokens = token_response.json()
         
@@ -251,7 +255,17 @@ def google_oauth_callback():
         return response
         
     except requests.exceptions.RequestException as e:
-        return jsonify({'error': f'OAuth error: {str(e)}'}), 400
+        current_app.logger.error(f'OAuth request failed: {str(e)}')
+        error_detail = 'Unknown error'
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                error_json = e.response.json()
+                error_detail = error_json.get('error_description', error_json.get('error', 'Unknown error'))
+                current_app.logger.error(f'OAuth error detail: {error_detail}')
+            except:
+                error_detail = e.response.text
+            current_app.logger.error(f'Response content: {e.response.text}')
+        return jsonify({'error': f'OAuth error: {error_detail}'}), 400
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
