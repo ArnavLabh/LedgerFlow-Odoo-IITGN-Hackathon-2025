@@ -95,6 +95,14 @@ def admin_config():
         return redirect(url_for('main.dashboard'))
     return render_template('admin/config.html', user=user)
 
+@main_bp.route('/admin/users')
+def admin_users():
+    """Admin user management page"""
+    user = get_current_user()
+    if not user or user.role.value != 'Admin':
+        return redirect(url_for('main.dashboard'))
+    return render_template('admin/users.html', user=user)
+
 @main_bp.route('/profile')
 def profile():
     """User profile page"""

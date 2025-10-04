@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models import (
-    User, ApproverAssignment, ApprovalRule, UserRole, RuleType
+    User, ApproverAssignment, ApprovalRule, UserRole, RuleType, Notification
 )
 from app.auth import admin_required
 
@@ -202,3 +202,118 @@ def deactivate_user(current_user, user_id):
     db.session.commit()
     
     return jsonify({'message': 'User deactivated successfully'})
+
+@admin_bp.route('/users/<user_id>/activate', methods=['POST'])
+@admin_required
+def activate_user(current_user, user_id):
+    """Activate user"""
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if user.company_id != current_user.company_id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    user.is_active = True
+    db.session.commit()
+    
+    return jsonify({'message': 'User activated successfully'})
+
+@admin_bp.route('/users/create', methods=['POST'])
+@admin_required
+def create_user(current_user):
+    """Create a new user for the company"""
+    data = request.get_json()
+    
+    required_fields = ['email', 'password', 'full_name', 'role']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    # Check if user already exists
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify({'error': 'User with this email already exists'}), 400
+    
+    try:
+        from app.auth import hash_password
+        
+        role = UserRole[data['role'].upper()]
+        
+        user = User(
+            email=data['email'],
+            password_hash=hash_password(data['password']),
+            full_name=data['full_name'],
+            role=role,
+            company_id=current_user.company_id,
+            manager_id=data.get('manager_id'),
+            is_active=True
+        )
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        # Send notification to new user
+        from app.models import Notification
+        notification = Notification(
+            user_id=user.id,
+            title='Welcome to LedgerFlow',
+            message=f'Your account has been created for {current_user.company.name}. You can now log in.',
+            link='/login'
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        return jsonify(user.to_dict()), 201
+        
+    except KeyError:
+        return jsonify({'error': 'Invalid role'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users/add', methods=['POST'])
+@admin_required
+def add_existing_user(current_user):
+    """Add an existing user to the company"""
+    data = request.get_json()
+    
+    if not data.get('user_id') or not data.get('role'):
+        return jsonify({'error': 'User ID and role are required'}), 400
+    
+    try:
+        user = User.query.get(data['user_id'])
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if user.company_id == current_user.company_id:
+            return jsonify({'error': 'User is already in this company'}), 400
+        
+        role = UserRole[data['role'].upper()]
+        
+        # Update user's company and role
+        user.company_id = current_user.company_id
+        user.role = role
+        user.manager_id = data.get('manager_id')
+        
+        db.session.commit()
+        
+        # Send notification
+        from app.models import Notification
+        notification = Notification(
+            user_id=user.id,
+            title='Added to Company',
+            message=f'You have been added to {current_user.company.name} as {role.value}',
+            link='/dashboard'
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        return jsonify(user.to_dict()), 200
+        
+    except KeyError:
+        return jsonify({'error': 'Invalid role'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

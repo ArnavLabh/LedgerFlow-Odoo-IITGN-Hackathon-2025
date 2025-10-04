@@ -54,11 +54,19 @@
         }
         
         .hero-logo {
-            height: 120px;
-            width: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
             margin-bottom: 2rem;
-            filter: drop-shadow(0 10px 30px rgba(68, 161, 160, 0.4));
             animation: pulse-glow 3s ease-in-out infinite;
+        }
+        
+        .hero-logo-icon {
+            width: 80px;
+            height: 80px;
+            color: var(--color-teal);
+            filter: drop-shadow(0 10px 30px rgba(68, 161, 160, 0.4));
         }
         
         .hero-title {
@@ -331,7 +339,13 @@
         
         <div class="hero-container">
             <!-- Logo -->
-            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="LedgerFlow" class="hero-logo">
+            <div class="hero-logo">
+                <svg class="hero-logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M5 8h-1a2 2 0 00-2 2v9a2 2 0 002 2h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
             
             <!-- Hero content -->
             <h1 class="hero-title">LedgerFlow</h1>

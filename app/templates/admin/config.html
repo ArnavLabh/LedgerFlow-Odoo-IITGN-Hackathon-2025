@@ -298,6 +298,34 @@ function getUserName(userId) {
     return user ? user.full_name : 'Unknown';
 }
 
+function updateExistingUserSelect() {
+    const select = document.getElementById('existingUserSelect');
+    if (!select) return;
+    
+    if (allUsers.length === 0) {
+        select.innerHTML = '<option value="">No users available</option>';
+        return;
+    }
+    
+    // Filter out users already in the current company
+    const currentCompanyUserEmails = users.map(u => u.email);
+    const availableUsers = allUsers.filter(u => !currentCompanyUserEmails.includes(u.email));
+    
+    if (availableUsers.length === 0) {
+        select.innerHTML = '<option value="">All users already in company</option>';
+        return;
+    }
+    
+    select.innerHTML = `
+        <option value="">Select a user</option>
+        ${availableUsers.map(user => `
+            <option value="${user.email}">
+                ${user.full_name} (${user.email}) - ${user.company_name || 'No Company'}
+            </option>
+        `).join('')}
+    `;
+}
+
 function addApprover() {
     approvers.push({
         sequence: nextSequence++,

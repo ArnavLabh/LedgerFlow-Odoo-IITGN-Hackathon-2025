@@ -96,20 +96,27 @@ async function loadExpenseDetail() {
     try {
         const expenseId = '{{ expense_id }}';
         const response = await fetchWithAuth(`/api/expenses/${expenseId}`);
-        expense = await response.json();
         
         if (!response.ok) {
-            showToast(expense.error || 'Failed to load expense', 'error');
+            const error = await response.json();
+            showToast(error.error || 'Failed to load expense', 'error');
             return;
         }
         
+        expense = await response.json();
         renderExpense();
         
         // Check if current user needs to approve
-        const user = JSON.parse(localStorage.getItem('user'));
-        currentApproval = expense.approvals?.find(
-            a => a.approver_id === user.id && a.decision === 'Pending'
-        );
+        // Get current user from server-side data
+        const currentUserId = '{{ user.id if user else "" }}';
+        console.log('Current user ID:', currentUserId);
+        console.log('Expense approvals:', expense.approvals);
+        
+        if (currentUserId && expense.approvals) {
+            currentApproval = expense.approvals.find(
+                a => a.approver_id === currentUserId && a.decision === 'Pending'
+            );
+        }
         
         if (currentApproval && expense.status === 'Pending') {
             document.getElementById('approvalActions').style.display = 'block';

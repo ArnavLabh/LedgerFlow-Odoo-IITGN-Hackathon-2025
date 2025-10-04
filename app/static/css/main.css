@@ -118,16 +118,27 @@ body {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-white);
     white-space: nowrap;
+    margin: 0;
 }
 
-.logo-img {
-    height: 48px;
-    width: auto;
-    margin-right: 0.5rem;
+.logo-icon {
+    width: 36px;
+    height: 36px;
+    color: var(--color-white);
+    flex-shrink: 0;
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .nav {
@@ -408,9 +419,26 @@ body {
 }
 
 /* Auth Pages */
-.auth-logo {
+.auth-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: center;
+    margin: 0;
+}
+
+.auth-logo-icon {
+    width: 32px;
     height: 32px;
-    width: auto;
+    color: var(--color-teal);
+    flex-shrink: 0;
+}
+
+.auth-logo-text {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
 }
 .auth-shell {
     position: relative;
