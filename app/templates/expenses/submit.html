@@ -74,52 +74,104 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let isDraft = false;
+let isSubmitting = false;
+
+// Check authentication on page load
+if (!localStorage.getItem('access_token')) {
+    window.location.href = '/login';
+}
 
 // Set max date to today
 document.getElementById('dateIncurred').max = new Date().toISOString().split('T')[0];
 
 async function saveDraft() {
+    if (isSubmitting) return;
     isDraft = true;
     await submitExpense();
 }
 
 async function submitExpense() {
+    if (isSubmitting) return;
+    isSubmitting = true;
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        showToast('Please log in to submit expenses', 'error');
+        window.location.href = '/login';
+        return;
+    }
+    
+    // Disable buttons
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const draftBtn = document.querySelector('button[onclick="saveDraft()"]');
+    submitBtn.disabled = true;
+    draftBtn.disabled = true;
+    
     const data = {
-        amount: document.getElementById('amount').value,
+        amount: parseFloat(document.getElementById('amount').value),
         category: document.getElementById('category').value,
         date_incurred: document.getElementById('dateIncurred').value,
-        description: document.getElementById('description').value,
+        description: document.getElementById('description').value.trim(),
         currency: 'INR'
     };
     
     // Validate
-    if (!data.amount || !data.category || !data.date_incurred || !data.description) {
-        showToast('Please fill all required fields', 'error');
+    if (!data.amount || data.amount <= 0) {
+        showToast('Please enter a valid amount', 'error');
+        resetButtons();
+        return;
+    }
+    if (!data.category) {
+        showToast('Please select a category', 'error');
+        resetButtons();
+        return;
+    }
+    if (!data.date_incurred) {
+        showToast('Please select a date', 'error');
+        resetButtons();
+        return;
+    }
+    if (!data.description) {
+        showToast('Please enter a description', 'error');
+        resetButtons();
         return;
     }
     
     try {
+        console.log('Creating expense with data:', data);
+        
         // Create expense
         const createResponse = await fetchWithAuth('/api/expenses', {
             method: 'POST',
             body: JSON.stringify(data)
         });
         
+        console.log('Create response status:', createResponse.status);
+        
         const expense = await createResponse.json();
+        console.log('Create response data:', expense);
         
         if (!createResponse.ok) {
             showToast(expense.error || 'Failed to create expense', 'error');
+            resetButtons();
             return;
         }
         
         // Submit for approval if not draft
         if (!isDraft) {
+            console.log('Submitting expense for approval:', expense.id);
+            
             const submitResponse = await fetchWithAuth(`/api/expenses/${expense.id}/submit`, {
                 method: 'POST'
             });
             
+            console.log('Submit response status:', submitResponse.status);
+            
             if (!submitResponse.ok) {
-                showToast('Expense created but failed to submit', 'error');
+                const submitError = await submitResponse.json();
+                console.log('Submit error:', submitError);
+                showToast(submitError.error || 'Expense created but failed to submit', 'error');
                 setTimeout(() => window.location.href = '/expenses', 2000);
                 return;
             }
@@ -132,9 +184,18 @@ async function submitExpense() {
         setTimeout(() => window.location.href = '/expenses', 1500);
         
     } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to submit expense', 'error');
+        console.error('Error submitting expense:', error);
+        showToast('Failed to submit expense: ' + error.message, 'error');
+        resetButtons();
     }
+}
+
+function resetButtons() {
+    isSubmitting = false;
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const draftBtn = document.querySelector('button[onclick="saveDraft()"]');
+    submitBtn.disabled = false;
+    draftBtn.disabled = false;
 }
 
 document.getElementById('expenseForm').addEventListener('submit', async (e) => {

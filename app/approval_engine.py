@@ -11,59 +11,73 @@ class ApprovalEngine:
     @staticmethod
     def create_approval_chain(expense):
         """Create approval chain when expense is submitted"""
-        # Get approver assignments for this company
-        assignments = ApproverAssignment.query.filter_by(
-            company_id=expense.company_id
-        ).order_by(ApproverAssignment.sequence).all()
-        
-        if not assignments:
-            # No approval workflow configured, auto-approve
-            expense.status = ExpenseStatus.APPROVED
+        try:
+            # Get approver assignments for this company
+            assignments = ApproverAssignment.query.filter_by(
+                company_id=expense.company_id
+            ).order_by(ApproverAssignment.sequence).all()
+            
+            if not assignments:
+                # No approval workflow configured, auto-approve
+                expense.status = ExpenseStatus.APPROVED
+                db.session.commit()
+                ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
+                return
+            
+            # Create approval records for each step
+            approvals_created = 0
+            for assignment in assignments:
+                approver_id = None
+                
+                # Handle manager assignment
+                if assignment.is_manager and expense.creator.manager_id:
+                    approver_id = expense.creator.manager_id
+                elif assignment.user_id:
+                    approver_id = assignment.user_id
+                elif assignment.role:
+                    # Find first user with this role in the company
+                    user = User.query.filter_by(
+                        company_id=expense.company_id,
+                        role=assignment.role,
+                        is_active=True
+                    ).first()
+                    if user:
+                        approver_id = user.id
+                
+                if approver_id:
+                    approval = Approval(
+                        expense_id=expense.id,
+                        approver_id=approver_id,
+                        step=assignment.sequence,
+                        decision=ApprovalDecision.PENDING
+                    )
+                    db.session.add(approval)
+                    approvals_created += 1
+            
+            if approvals_created == 0:
+                # No valid approvers found, auto-approve
+                expense.status = ExpenseStatus.APPROVED
+                db.session.commit()
+                ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
+                return
+            
+            # Update expense status
+            expense.status = ExpenseStatus.PENDING
+            expense.current_approval_step = 1
             db.session.commit()
-            ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
-            return
-        
-        # Create approval records for each step
-        for assignment in assignments:
-            approver_id = None
             
-            # Handle manager assignment
-            if assignment.is_manager and expense.creator.manager_id:
-                approver_id = expense.creator.manager_id
-            elif assignment.user_id:
-                approver_id = assignment.user_id
-            elif assignment.role:
-                # Find first user with this role in the company
-                user = User.query.filter_by(
-                    company_id=expense.company_id,
-                    role=assignment.role,
-                    is_active=True
-                ).first()
-                if user:
-                    approver_id = user.id
+            # Notify first approver
+            first_approval = Approval.query.filter_by(
+                expense_id=expense.id,
+                step=1
+            ).first()
             
-            if approver_id:
-                approval = Approval(
-                    expense_id=expense.id,
-                    approver_id=approver_id,
-                    step=assignment.sequence,
-                    decision=ApprovalDecision.PENDING
-                )
-                db.session.add(approval)
-        
-        # Update expense status
-        expense.status = ExpenseStatus.PENDING
-        expense.current_approval_step = 1
-        db.session.commit()
-        
-        # Notify first approver
-        first_approval = Approval.query.filter_by(
-            expense_id=expense.id,
-            step=1
-        ).first()
-        
-        if first_approval:
-            ApprovalEngine._notify_approval_request(expense, first_approval.approver)
+            if first_approval:
+                ApprovalEngine._notify_approval_request(expense, first_approval.approver)
+                
+        except Exception as e:
+            db.session.rollback()
+            raise Exception(f"Failed to create approval chain: {str(e)}")
     
     @staticmethod
     def process_approval_decision(approval, decision, comments=None):
