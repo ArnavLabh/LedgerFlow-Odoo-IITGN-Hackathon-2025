@@ -27,68 +27,68 @@ def signup():
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
             return jsonify({'error': 'Email already registered'}), 400
-    
-    # Check for invite token
-    invite_token = data.get('invite_token')
-    if invite_token:
-        invite = Invite.query.filter_by(token=invite_token, accepted=False).first()
-        if not invite:
-            return jsonify({'error': 'Invalid or expired invite'}), 400
-        if invite.expires_at < datetime.utcnow():
-            return jsonify({'error': 'Invite has expired'}), 400
         
-        # Create user with invited role
-        user = User(
-            email=data['email'],
-            password_hash=hash_password(data['password']),
-            full_name=data['full_name'],
-            role=invite.role,
-            company_id=invite.company_id
-        )
-        db.session.add(user)
-        invite.accepted = True
-        db.session.commit()
-    else:
-        # Create new company and admin user
-        company_name = data.get('company_name', f"{data['full_name']}'s Company")
+        # Check for invite token
+        invite_token = data.get('invite_token')
+        if invite_token:
+            invite = Invite.query.filter_by(token=invite_token, accepted=False).first()
+            if not invite:
+                return jsonify({'error': 'Invalid or expired invite'}), 400
+            if invite.expires_at < datetime.utcnow():
+                return jsonify({'error': 'Invite has expired'}), 400
+            
+            # Create user with invited role
+            user = User(
+                email=data['email'],
+                password_hash=hash_password(data['password']),
+                full_name=data['full_name'],
+                role=invite.role,
+                company_id=invite.company_id
+            )
+            db.session.add(user)
+            invite.accepted = True
+            db.session.commit()
+        else:
+            # Create new company and admin user
+            company_name = data.get('company_name', f"{data['full_name']}'s Company")
+            
+            company = Company(
+                name=company_name,
+                default_currency='INR'
+            )
+            db.session.add(company)
+            db.session.flush()  # Get company ID
+            
+            user = User(
+                email=data['email'],
+                password_hash=hash_password(data['password']),
+                full_name=data['full_name'],
+                role=UserRole.ADMIN,
+                company_id=company.id
+            )
+            db.session.add(user)
+            db.session.commit()
         
-        company = Company(
-            name=company_name,
-            default_currency='INR'
-        )
-        db.session.add(company)
-        db.session.flush()  # Get company ID
+        # Generate tokens
+        access_token = generate_access_token(user.id, user.company_id, user.role.value)
+        refresh_token = generate_refresh_token(user.id)
         
-        user = User(
-            email=data['email'],
-            password_hash=hash_password(data['password']),
-            full_name=data['full_name'],
-            role=UserRole.ADMIN,
-            company_id=company.id
+        # Set refresh token in httpOnly cookie
+        response = make_response(jsonify({
+            'access_token': access_token,
+            'user': user.to_dict(include_company=True)
+        }))
+        
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=current_app.config['PLATFORM'] == 'vercel',
+            samesite='Lax',
+            max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
         )
-        db.session.add(user)
-        db.session.commit()
-    
-    # Generate tokens
-    access_token = generate_access_token(user.id, user.company_id, user.role.value)
-    refresh_token = generate_refresh_token(user.id)
-    
-    # Set refresh token in httpOnly cookie
-    response = make_response(jsonify({
-        'access_token': access_token,
-        'user': user.to_dict(include_company=True)
-    }))
-    
-    response.set_cookie(
-        'refresh_token',
-        refresh_token,
-        httponly=True,
-        secure=current_app.config['PLATFORM'] == 'vercel',
-        samesite='Lax',
-        max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
-    )
-    
-    return response, 201
+        
+        return response, 201
     
     except Exception as e:
         # Log the error for debugging
