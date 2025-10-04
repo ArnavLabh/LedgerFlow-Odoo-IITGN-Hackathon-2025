@@ -1,28 +1,33 @@
 // Global utilities and notification handling
 
-// Get access token from localStorage
+// Get access token from localStorage or cookies
 function getAccessToken() {
-    return localStorage.getItem('access_token');
+    // First try localStorage
+    let token = localStorage.getItem('access_token');
+    if (token) return token;
+    
+    // Fallback to checking if we have cookies (for OAuth users)
+    // The server will handle cookie-based auth
+    return null;
 }
 
 // Fetch with authentication
 async function fetchWithAuth(url, options = {}) {
     const token = getAccessToken();
     
-    if (!token) {
-        window.location.href = '/login';
-        throw new Error('No access token');
-    }
-    
     const defaultOptions = {
         headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
             ...options.headers
         },
         credentials: 'include',
         ...options
     };
+    
+    // Add Authorization header only if we have a token
+    if (token) {
+        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+    }
     
     const response = await fetch(url, defaultOptions);
     
@@ -31,7 +36,10 @@ async function fetchWithAuth(url, options = {}) {
         const refreshed = await refreshAccessToken();
         if (refreshed) {
             // Retry the request with new token
-            defaultOptions.headers['Authorization'] = `Bearer ${getAccessToken()}`;
+            const newToken = getAccessToken();
+            if (newToken) {
+                defaultOptions.headers['Authorization'] = `Bearer ${newToken}`;
+            }
             return fetch(url, defaultOptions);
         } else {
             window.location.href = '/login';
@@ -233,18 +241,11 @@ document.addEventListener('click', (e) => {
 // Logout
 async function logout() {
     try {
-        // Call logout API if token exists
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-        }
+        // Call logout API
+        await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -253,8 +254,8 @@ async function logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     
-    // Redirect to login
-    window.location.href = '/login';
+    // Clear cookies by navigating to logout route
+    window.location.href = '/logout';
 }
 
 // Start polling when page loads (if user is logged in)
