@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Configuration - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Approval Configuration</h1>
+        <p class="subtitle">Manage approval workflows and rules</p>
+    </div>
+    
+    <div class="expense-form-container">
+        <h2>Approval Sequence</h2>
+        <p style="color: var(--color-gray-600); margin-bottom: 1.5rem;">
+            Define the approval sequence for expense submissions
+        </p>
+        
+        <div id="approversList"></div>
+        
+        <button onclick="addApprover()" class="btn btn-secondary">
+            <i class="fas fa-plus"></i> Add Approver
+        </button>
+        
+        <button onclick="saveApproverSequence()" class="btn btn-primary" style="margin-left: 1rem;">
+            <i class="fas fa-save"></i> Save Sequence
+        </button>
+    </div>
+    
+    <div class="expense-form-container" style="margin-top: 2rem;">
+        <h2>Conditional Approval Rules</h2>
+        <p style="color: var(--color-gray-600); margin-bottom: 1.5rem;">
+            Set up rules for auto-approval based on conditions
+        </p>
+        
+        <div id="rulesList"></div>
+        
+        <button onclick="showAddRuleModal()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Rule
+        </button>
+    </div>
+</div>
+
+<!-- Add Rule Modal -->
+<div id="ruleModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <h2>Add Approval Rule</h2>
+        <form id="ruleForm" class="auth-form" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label for="ruleType">Rule Type</label>
+                <select id="ruleType" class="form-select" onchange="handleRuleTypeChange()" required>
+                    <option value="">Select type</option>
+                    <option value="PERCENTAGE">Percentage-based</option>
+                    <option value="SPECIFIC">Specific Approver</option>
+                    <option value="HYBRID">Hybrid (Both)</option>
+                </select>
+            </div>
+            
+            <div id="percentageFields" class="form-group" style="display: none;">
+                <label for="percentageThreshold">Percentage Threshold (%)</label>
+                <input type="number" id="percentageThreshold" class="form-input" min="1" max="100">
+                <p style="font-size: 0.875rem; color: var(--color-gray-600); margin-top: 0.25rem;">
+                    Auto-approve when this percentage of approvers approve
+                </p>
+            </div>
+            
+            <div id="specificFields" class="form-group" style="display: none;">
+                <label for="specificApprover">Specific Approver</label>
+                <select id="specificApprover" class="form-select">
+                    <option value="">Select user</option>
+                </select>
+                <p style="font-size: 0.875rem; color: var(--color-gray-600); margin-top: 0.25rem;">
+                    Auto-approve when this specific user approves
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" onclick="closeRuleModal()" class="btn btn-secondary">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Add Rule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let approvers = [];
+let rules = [];
+let users = [];
+let nextSequence = 1;
+
+async function loadUsers() {
+    try {
+        const response = await fetchWithAuth('/api/company/users');
+        users = await response.json();
+        updateApproverSelects();
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+async function loadApproverAssignments() {
+    try {
+        const response = await fetchWithAuth('/api/admin/approver-assignments');
+        if (response.ok) {
+            approvers = await response.json();
+            nextSequence = approvers.length > 0 ? Math.max(...approvers.map(a => a.sequence)) + 1 : 1;
+            renderApprovers();
+        }
+    } catch (error) {
+        console.error('Error loading approver assignments:', error);
+    }
+}
+
+async function loadRules() {
+    try {
+        const response = await fetchWithAuth('/api/admin/approval-rules');
+        if (response.ok) {
+            rules = await response.json();
+            renderRules();
+        }
+    } catch (error) {
+        console.error('Error loading rules:', error);
+    }
+}
+
+function renderApprovers() {
+    const container = document.getElementById('approversList');
+    
+    if (approvers.length === 0) {
+        container.innerHTML = '<p style="color: var(--color-gray-600);">No approvers configured</p>';
+        return;
+    }
+    
+    container.innerHTML = approvers.map((approver, index) => `
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--color-gray-50); border-radius: 0.5rem; margin-bottom: 0.75rem;">
+            <span style="font-weight: 600; min-width: 80px;">Step ${approver.sequence}</span>
+            <select class="form-select" style="flex: 1;" data-index="${index}" onchange="updateApprover(${index})">
+                <option value="">Select approver</option>
+                ${users.map(u => `
+                    <option value="${u.id}" ${approver.user_id === u.id ? 'selected' : ''}>
+                        ${u.full_name} (${u.role})
+                    </option>
+                `).join('')}
+            </select>
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" ${approver.is_manager ? 'checked' : ''} onchange="toggleManager(${index})">
+                Is Manager?
+            </label>
+            <button class="btn btn-sm btn-danger" onclick="removeApprover(${index})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function renderRules() {
+    const container = document.getElementById('rulesList');
+    
+    if (rules.length === 0) {
+        container.innerHTML = '<p style="color: var(--color-gray-600);">No conditional rules configured</p>';
+        return;
+    }
+    
+    container.innerHTML = rules.map((rule, index) => `
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--color-gray-50); border-radius: 0.5rem; margin-bottom: 0.75rem;">
+            <div style="flex: 1;">
+                <div style="font-weight: 600;">${rule.rule_type}</div>
+                <div style="font-size: 0.875rem; color: var(--color-gray-600);">
+                    ${rule.rule_type === 'PERCENTAGE' || rule.rule_type === 'HYBRID' ? 
+                        `Threshold: ${rule.percentage_threshold}%` : ''}
+                    ${rule.rule_type === 'SPECIFIC' || rule.rule_type === 'HYBRID' ? 
+                        `Approver: ${getUserName(rule.specific_approver_user_id)}` : ''}
+                </div>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteRule('${rule.id}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function getUserName(userId) {
+    const user = users.find(u => u.id === userId);
+    return user ? user.full_name : 'Unknown';
+}
+
+function addApprover() {
+    approvers.push({
+        sequence: nextSequence++,
+        user_id: null,
+        is_manager: false
+    });
+    renderApprovers();
+}
+
+function removeApprover(index) {
+    approvers.splice(index, 1);
+    // Resequence
+    approvers.forEach((a, i) => a.sequence = i + 1);
+    nextSequence = approvers.length + 1;
+    renderApprovers();
+}
+
+function updateApprover(index) {
+    const select = document.querySelector(`[data-index="${index}"]`);
+    approvers[index].user_id = select.value;
+}
+
+function toggleManager(index) {
+    approvers[index].is_manager = !approvers[index].is_manager;
+}
+
+async function saveApproverSequence() {
+    // Validate
+    const valid = approvers.every(a => a.user_id || a.is_manager);
+    if (!valid) {
+        showToast('Please select an approver for each step', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetchWithAuth('/api/admin/approver-assignments', {
+            method: 'POST',
+            body: JSON.stringify(approvers)
+        });
+        
+        if (response.ok) {
+            showToast('Approval sequence saved!', 'success');
+            loadApproverAssignments();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to save', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving:', error);
+        showToast('Failed to save', 'error');
+    }
+}
+
+function showAddRuleModal() {
+    document.getElementById('ruleModal').style.display = 'flex';
+}
+
+function closeRuleModal() {
+    document.getElementById('ruleModal').style.display = 'none';
+    document.getElementById('ruleForm').reset();
+    document.getElementById('percentageFields').style.display = 'none';
+    document.getElementById('specificFields').style.display = 'none';
+}
+
+function handleRuleTypeChange() {
+    const type = document.getElementById('ruleType').value;
+    const percentageFields = document.getElementById('percentageFields');
+    const specificFields = document.getElementById('specificFields');
+    
+    percentageFields.style.display = (type === 'PERCENTAGE' || type === 'HYBRID') ? 'block' : 'none';
+    specificFields.style.display = (type === 'SPECIFIC' || type === 'HYBRID') ? 'block' : 'none';
+}
+
+function updateApproverSelects() {
+    const select = document.getElementById('specificApprover');
+    select.innerHTML = '<option value="">Select user</option>' + 
+        users.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
+}
+
+document.getElementById('ruleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const type = document.getElementById('ruleType').value;
+    const data = { rule_type: type };
+    
+    if (type === 'PERCENTAGE' || type === 'HYBRID') {
+        data.percentage_threshold = parseInt(document.getElementById('percentageThreshold').value);
+    }
+    
+    if (type === 'SPECIFIC' || type === 'HYBRID') {
+        data.specific_approver_user_id = document.getElementById('specificApprover').value;
+    }
+    
+    try {
+        const response = await fetchWithAuth('/api/admin/approval-rules', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showToast('Rule added successfully!', 'success');
+            closeRuleModal();
+            loadRules();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to add rule', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding rule:', error);
+        showToast('Failed to add rule', 'error');
+    }
+});
+
+async function deleteRule(ruleId) {
+    if (!confirm('Are you sure you want to delete this rule?')) return;
+    
+    try {
+        const response = await fetchWithAuth(`/api/admin/approval-rules/${ruleId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showToast('Rule deleted', 'success');
+            loadRules();
+        } else {
+            showToast('Failed to delete rule', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting rule:', error);
+        showToast('Failed to delete rule', 'error');
+    }
+}
+
+loadUsers();
+loadApproverAssignments();
+loadRules();
+</script>
+{% endblock %}

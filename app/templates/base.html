@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LedgerFlow - Expense Management{% endblock %}</title>
+    
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user %}
+    <!-- Header with Notification Bell -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <h1 class="logo"><i class="fas fa-receipt"></i> LedgerFlow</h1>
+                <nav class="nav">
+                    <a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+                    <a href="/expenses" class="nav-link"><i class="fas fa-list"></i> Expenses</a>
+                    {% if user.role in ['Manager', 'Finance', 'Director', 'CFO', 'Admin'] %}
+                    <a href="/approvals" class="nav-link"><i class="fas fa-check-circle"></i> Approvals</a>
+                    {% endif %}
+                    {% if user.role == 'Admin' %}
+                    <a href="/admin/config" class="nav-link"><i class="fas fa-cog"></i> Config</a>
+                    {% endif %}
+                </nav>
+            </div>
+            <div class="header-right">
+                <!-- Notification Bell -->
+                <div class="notification-container">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button onclick="markAllRead()" class="mark-all-btn">Mark all read</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <p class="empty-notifications">No notifications</p>
+                        </div>
+                        <a href="/notifications" class="view-all-btn">View All</a>
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="user-menu">
+                    <button class="user-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-user-circle"></i> {{ user.full_name }}
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown" style="display: none;">
+                        <div class="user-info">
+                            <p class="user-name">{{ user.full_name }}</p>
+                            <p class="user-role">{{ user.role }}</p>
+                        </div>
+                        <button onclick="logout()" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

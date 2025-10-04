@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Manager Dashboard - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Manager Dashboard</h1>
+        <p class="subtitle">Review and approve expenses</p>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <i class="fas fa-hourglass-half stat-icon"></i>
+            <div class="stat-content">
+                <h3 id="pendingApprovalsCount">0</h3>
+                <p>Pending Approvals</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-users stat-icon"></i>
+            <div class="stat-content">
+                <h3 id="teamExpensesCount">0</h3>
+                <p>Team Expenses</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="approvals-section">
+        <h2>Pending Approvals</h2>
+        <div class="table-container">
+            <table class="data-table" id="approvalsTable">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="approvalsBody">
+                    <tr>
+                        <td colspan="6" class="text-center">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+let approvals = [];
+
+async function loadApprovals() {
+    try {
+        const response = await fetchWithAuth('/api/approvals/pending');
+        const data = await response.json();
+        approvals = data;
+        renderApprovals();
+        document.getElementById('pendingApprovalsCount').textContent = approvals.length;
+    } catch (error) {
+        console.error('Error loading approvals:', error);
+    }
+}
+
+function renderApprovals() {
+    const tbody = document.getElementById('approvalsBody');
+    
+    if (approvals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No pending approvals</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = approvals.map(approval => `
+        <tr>
+            <td>${approval.expense.creator.full_name}</td>
+            <td>${approval.expense.category}</td>
+            <td>${approval.expense.description}</td>
+            <td>₹${parseFloat(approval.expense.amount).toFixed(2)}</td>
+            <td>${new Date(approval.expense.date_incurred).toLocaleDateString()}</td>
+            <td>
+                <a href="/expenses/${approval.expense.id}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-check"></i> Review
+                </a>
+            </td>
+        </tr>
+    `).join('');
+}
+
+loadApprovals();
+</script>
+{% endblock %}

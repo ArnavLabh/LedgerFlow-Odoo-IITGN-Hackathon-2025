@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Expense - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Submit New Expense</h1>
+        <p class="subtitle">Fill in the details of your expense</p>
+    </div>
+    
+    <div class="expense-form-container">
+        <form id="expenseForm" class="expense-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="amount"><i class="fas fa-rupee-sign"></i> Amount *</label>
+                    <input type="number" id="amount" class="form-input" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category"><i class="fas fa-tag"></i> Category *</label>
+                    <select id="category" class="form-select" required>
+                        <option value="">Select category</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Meals">Meals</option>
+                        <option value="Accommodation">Accommodation</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                        <option value="Software">Software</option>
+                        <option value="Training">Training</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="dateIncurred"><i class="fas fa-calendar"></i> Date Incurred *</label>
+                <input type="date" id="dateIncurred" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description"><i class="fas fa-align-left"></i> Description *</label>
+                <textarea id="description" class="form-textarea" placeholder="Provide details about this expense" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" onclick="saveDraft()" class="btn btn-secondary">
+                        <i class="fas fa-save"></i> Save as Draft
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit for Approval
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let isDraft = false;
+
+// Set max date to today
+document.getElementById('dateIncurred').max = new Date().toISOString().split('T')[0];
+
+async function saveDraft() {
+    isDraft = true;
+    await submitExpense();
+}
+
+async function submitExpense() {
+    const data = {
+        amount: document.getElementById('amount').value,
+        category: document.getElementById('category').value,
+        date_incurred: document.getElementById('dateIncurred').value,
+        description: document.getElementById('description').value,
+        currency: 'INR'
+    };
+    
+    // Validate
+    if (!data.amount || !data.category || !data.date_incurred || !data.description) {
+        showToast('Please fill all required fields', 'error');
+        return;
+    }
+    
+    try {
+        // Create expense
+        const createResponse = await fetchWithAuth('/api/expenses', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        const expense = await createResponse.json();
+        
+        if (!createResponse.ok) {
+            showToast(expense.error || 'Failed to create expense', 'error');
+            return;
+        }
+        
+        // Submit for approval if not draft
+        if (!isDraft) {
+            const submitResponse = await fetchWithAuth(`/api/expenses/${expense.id}/submit`, {
+                method: 'POST'
+            });
+            
+            if (!submitResponse.ok) {
+                showToast('Expense created but failed to submit', 'error');
+                setTimeout(() => window.location.href = '/expenses', 2000);
+                return;
+            }
+            
+            showToast('Expense submitted for approval!', 'success');
+        } else {
+            showToast('Expense saved as draft', 'success');
+        }
+        
+        setTimeout(() => window.location.href = '/expenses', 1500);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Failed to submit expense', 'error');
+    }
+}
+
+document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    isDraft = false;
+    await submitExpense();
+});
+</script>
+{% endblock %}

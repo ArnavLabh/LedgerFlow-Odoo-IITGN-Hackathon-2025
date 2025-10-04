@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p class="subtitle">Manage company settings and users</p>
+    </div>
+    
+    <div class="dashboard-actions">
+        <button onclick="showInviteModal()" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Invite User
+        </button>
+        <a href="/admin/config" class="btn btn-secondary">
+            <i class="fas fa-cog"></i> Configure Approvals
+        </a>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <i class="fas fa-users stat-icon"></i>
+            <div class="stat-content">
+                <h3 id="totalUsers">0</h3>
+                <p>Total Users</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-clock stat-icon"></i>
+            <div class="stat-content">
+                <h3 id="pendingExpenses">0</h3>
+                <p>Pending Expenses</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-check-circle stat-icon approved"></i>
+            <div class="stat-content">
+                <h3 id="approvedExpenses">0</h3>
+                <p>Approved This Month</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <h2>Company Users</h2>
+        <table class="data-table" id="usersTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersBody">
+                <tr>
+                    <td colspan="5" class="text-center">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="table-container" style="margin-top: 2rem;">
+        <h2>All Expenses</h2>
+        <table class="data-table" id="expensesTable">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="expensesBody">
+                <tr>
+                    <td colspan="6" class="text-center">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Invite Modal -->
+<div id="inviteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 500px;">
+        <h2>Invite New User</h2>
+        <form id="inviteForm" class="auth-form" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label for="inviteEmail">Email</label>
+                <input type="email" id="inviteEmail" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="inviteRole">Role</label>
+                <select id="inviteRole" class="form-select" required>
+                    <option value="">Select role</option>
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="FINANCE">Finance</option>
+                    <option value="DIRECTOR">Director</option>
+                    <option value="CFO">CFO</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" onclick="closeInviteModal()" class="btn btn-secondary">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Send Invite
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let users = [];
+let expenses = [];
+
+async function loadUsers() {
+    try {
+        const response = await fetchWithAuth('/api/company/users');
+        users = await response.json();
+        renderUsers();
+        document.getElementById('totalUsers').textContent = users.length;
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+function renderUsers() {
+    const tbody = document.getElementById('usersBody');
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.full_name}</td>
+            <td>${user.email}</td>
+            <td>${user.role}</td>
+            <td><span class="status-badge ${user.is_active ? 'status-approved' : 'status-rejected'}">
+                ${user.is_active ? 'Active' : 'Inactive'}
+            </span></td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick="editUser('${user.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function loadExpenses() {
+    try {
+        const response = await fetchWithAuth('/api/expenses');
+        expenses = await response.json();
+        renderExpenses();
+        
+        document.getElementById('pendingExpenses').textContent = 
+            expenses.filter(e => e.status === 'Pending').length;
+        
+        const thisMonth = new Date().getMonth();
+        document.getElementById('approvedExpenses').textContent = 
+            expenses.filter(e => 
+                e.status === 'Approved' && 
+                new Date(e.updated_at).getMonth() === thisMonth
+            ).length;
+    } catch (error) {
+        console.error('Error loading expenses:', error);
+    }
+}
+
+function renderExpenses() {
+    const tbody = document.getElementById('expensesBody');
+    if (expenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No expenses found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = expenses.slice(0, 10).map(expense => `
+        <tr>
+            <td>${expense.creator?.full_name || 'Unknown'}</td>
+            <td>${formatDate(expense.date_incurred)}</td>
+            <td>${expense.category}</td>
+            <td>₹${parseFloat(expense.amount).toFixed(2)}</td>
+            <td><span class="status-badge status-${expense.status.toLowerCase()}">${expense.status}</span></td>
+            <td>
+                <a href="/expenses/${expense.id}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-eye"></i> View
+                </a>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showInviteModal() {
+    document.getElementById('inviteModal').style.display = 'flex';
+}
+
+function closeInviteModal() {
+    document.getElementById('inviteModal').style.display = 'none';
+    document.getElementById('inviteForm').reset();
+}
+
+document.getElementById('inviteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        email: document.getElementById('inviteEmail').value,
+        role: document.getElementById('inviteRole').value
+    };
+    
+    try {
+        const response = await fetchWithAuth('/api/company/invite', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast('Invite sent successfully!', 'success');
+            closeInviteModal();
+            
+            // Show invite link
+            prompt('Share this invite link:', result.invite_link);
+        } else {
+            showToast(result.error || 'Failed to send invite', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending invite:', error);
+        showToast('Failed to send invite', 'error');
+    }
+});
+
+loadUsers();
+loadExpenses();
+</script>
+{% endblock %}

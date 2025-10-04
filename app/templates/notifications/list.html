@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>All Notifications</h1>
+        <button onclick="markAllRead()" class="btn btn-secondary">
+            <i class="fas fa-check-double"></i> Mark All as Read
+        </button>
+    </div>
+    
+    <div class="table-container">
+        <table class="data-table" id="notificationsTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="notificationsBody">
+                <tr>
+                    <td colspan="5" class="text-center">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let notifications = [];
+
+async function loadAllNotifications() {
+    try {
+        const response = await fetchWithAuth('/api/notifications?limit=100');
+        const data = await response.json();
+        notifications = data.notifications;
+        renderNotifications();
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
+
+function renderNotifications() {
+    const tbody = document.getElementById('notificationsBody');
+    
+    if (notifications.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No notifications</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = notifications.map(notif => `
+        <tr style="${notif.read ? '' : 'background-color: #eff6ff;'}">
+            <td style="font-weight: ${notif.read ? '400' : '600'}">${notif.title}</td>
+            <td>${notif.message}</td>
+            <td>${formatDate(notif.created_at)}</td>
+            <td>
+                <span class="status-badge ${notif.read ? 'status-draft' : 'status-pending'}">
+                    ${notif.read ? 'Read' : 'Unread'}
+                </span>
+            </td>
+            <td>
+                ${notif.link && notif.link !== '#' ? `
+                    <a href="${notif.link}" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-external-link-alt"></i> View
+                    </a>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+loadAllNotifications();
+</script>
+{% endblock %}

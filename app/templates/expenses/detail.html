@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Detail - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Expense Details</h1>
+        <button onclick="window.history.back()" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+    </div>
+    
+    <div id="expenseContent" style="display: none;">
+        <div class="expense-form-container">
+            <div class="expense-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <p id="expenseAmount" style="font-size: 1.5rem; font-weight: 700; color: var(--color-teal);"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <p id="expenseStatus"></p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <p id="expenseCategory"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Date Incurred</label>
+                        <p id="expenseDate"></p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <p id="expenseDescription"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Submitted By</label>
+                    <p id="expenseCreator"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="approval-chain">
+            <h2>Approval History</h2>
+            <div id="approvalChain"></div>
+            
+            <div id="approvalActions" style="margin-top: 2rem; display: none;">
+                <h3>Your Action Required</h3>
+                <div class="form-group">
+                    <label for="comments">Comments (optional)</label>
+                    <textarea id="comments" class="form-textarea" placeholder="Add your comments"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="makeDecision('APPROVED')" class="btn btn-success">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button onclick="makeDecision('REJECTED')" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingState" class="text-center">
+        <p>Loading...</p>
+    </div>
+</div>
+
+<script>
+let expense = null;
+let currentApproval = null;
+
+async function loadExpenseDetail() {
+    try {
+        const expenseId = '{{ expense_id }}';
+        const response = await fetchWithAuth(`/api/expenses/${expenseId}`);
+        expense = await response.json();
+        
+        if (!response.ok) {
+            showToast(expense.error || 'Failed to load expense', 'error');
+            return;
+        }
+        
+        renderExpense();
+        
+        // Check if current user needs to approve
+        const user = JSON.parse(localStorage.getItem('user'));
+        currentApproval = expense.approvals?.find(
+            a => a.approver_id === user.id && a.decision === 'Pending'
+        );
+        
+        if (currentApproval && expense.status === 'Pending') {
+            document.getElementById('approvalActions').style.display = 'block';
+        }
+        
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('expenseContent').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading expense:', error);
+        showToast('Failed to load expense', 'error');
+    }
+}
+
+function renderExpense() {
+    document.getElementById('expenseAmount').textContent = formatCurrency(expense.amount);
+    document.getElementById('expenseStatus').innerHTML = 
+        `<span class="status-badge status-${expense.status.toLowerCase()}">${expense.status}</span>`;
+    document.getElementById('expenseCategory').textContent = expense.category;
+    document.getElementById('expenseDate').textContent = formatDate(expense.date_incurred);
+    document.getElementById('expenseDescription').textContent = expense.description;
+    document.getElementById('expenseCreator').textContent = expense.creator?.full_name || 'Unknown';
+    
+    renderApprovalChain();
+}
+
+function renderApprovalChain() {
+    const chain = document.getElementById('approvalChain');
+    
+    if (!expense.approvals || expense.approvals.length === 0) {
+        chain.innerHTML = '<p>No approval workflow configured</p>';
+        return;
+    }
+    
+    chain.innerHTML = expense.approvals.map(approval => `
+        <div class="approval-step ${approval.decision.toLowerCase()}">
+            <div style="flex: 1;">
+                <div style="font-weight: 600;">
+                    Step ${approval.step}: ${approval.approver.full_name} (${approval.approver.role})
+                </div>
+                <div style="color: var(--color-gray-600); font-size: 0.875rem; margin-top: 0.25rem;">
+                    Status: <span class="status-badge status-${approval.decision.toLowerCase()}">${approval.decision}</span>
+                </div>
+                ${approval.comments ? `
+                    <div style="margin-top: 0.5rem; font-size: 0.875rem;">
+                        <i class="fas fa-comment"></i> ${approval.comments}
+                    </div>
+                ` : ''}
+                ${approval.decided_at ? `
+                    <div style="color: var(--color-gray-600); font-size: 0.75rem; margin-top: 0.25rem;">
+                        ${formatDate(approval.decided_at)}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+async function makeDecision(decision) {
+    if (!currentApproval) return;
+    
+    const comments = document.getElementById('comments').value;
+    
+    if (!confirm(`Are you sure you want to ${decision.toLowerCase()} this expense?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetchWithAuth(`/api/approvals/${currentApproval.id}/decision`, {
+            method: 'POST',
+            body: JSON.stringify({ decision, comments })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast(`Expense ${decision.toLowerCase()} successfully!`, 'success');
+            setTimeout(() => window.location.href = '/approvals', 1500);
+        } else {
+            showToast(result.error || 'Failed to process decision', 'error');
+        }
+    } catch (error) {
+        console.error('Error making decision:', error);
+        showToast('Failed to process decision', 'error');
+    }
+}
+
+loadExpenseDetail();
+</script>
+{% endblock %}
