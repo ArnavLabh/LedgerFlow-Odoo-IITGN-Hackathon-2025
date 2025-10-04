@@ -233,13 +233,27 @@ document.addEventListener('click', (e) => {
 // Logout
 async function logout() {
     try {
-        await fetchWithAuth('/api/auth/logout', { method: 'POST' });
+        // Call logout API if token exists
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+        }
     } catch (error) {
         console.error('Logout error:', error);
     }
     
+    // Clear local storage
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
+    
+    // Redirect to login
     window.location.href = '/login';
 }
 
