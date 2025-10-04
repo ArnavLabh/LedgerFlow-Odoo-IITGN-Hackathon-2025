@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Expense Submission</title>
+</head>
+<body>
+    <h1>Debug Expense Submission</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // Test if we can reach the API
+                const response = await fetch('/api/expenses', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                resultDiv.innerHTML = `<p>API Response Status: ${response.status}</p>`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML += `<p>API Working! Got ${data.length} expenses</p>`;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML += `<p>API Error: ${error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Network Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
