@@ -3,13 +3,15 @@
 {% block title %}Submit Expense - LedgerFlow{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container" data-animate="fade-in">
     <div class="dashboard-header">
-        <h1>Submit New Expense</h1>
-        <p class="subtitle">Fill in the details of your expense</p>
+        <div>
+            <h1>Submit New Expense</h1>
+            <p class="subtitle">Fill in the details of your expense</p>
+        </div>
     </div>
     
-    <div class="expense-form-container">
+    <div class="expense-form-container" data-animate="slide-up" style="--animate-delay: 100ms;">
         <form id="expenseForm" class="expense-form">
             <div class="form-row">
                 <div class="form-group">
@@ -44,11 +46,11 @@
             </div>
             
             <div class="form-group">
-                <div style="display: flex; gap: 1rem;">
-                    <button type="button" onclick="saveDraft()" class="btn btn-secondary">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button type="button" onclick="saveDraft()" class="btn btn-outline" style="flex: 1; min-width: 200px;">
                         <i class="fas fa-save"></i> Save as Draft
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary btn-elevated" style="flex: 1; min-width: 200px;">
                         <i class="fas fa-paper-plane"></i> Submit for Approval
                     </button>
                 </div>
@@ -58,6 +60,19 @@
 </div>
 
 <script>
+// Animate on scroll
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-animated');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+});
+
 let isDraft = false;
 
 // Set max date to today

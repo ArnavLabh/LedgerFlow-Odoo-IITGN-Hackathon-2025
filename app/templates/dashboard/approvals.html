@@ -3,13 +3,15 @@
 {% block title %}Approvals - LedgerFlow{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container" data-animate="fade-in">
     <div class="dashboard-header">
-        <h1>Pending Approvals</h1>
-        <p class="subtitle">Review and approve expense claims</p>
+        <div>
+            <h1>Pending Approvals</h1>
+            <p class="subtitle">Review and approve expense claims</p>
+        </div>
     </div>
     
-    <div class="table-container">
+    <div class="table-container" data-animate="slide-up" style="--animate-delay: 100ms;">
         <table class="data-table" id="approvalsTable">
             <thead>
                 <tr>
@@ -32,6 +34,19 @@
 </div>
 
 <script>
+// Animate on scroll
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-animated');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+});
+
 let approvals = [];
 
 async function loadApprovals() {
@@ -62,7 +77,7 @@ function renderApprovals() {
             <td>${formatDate(approval.expense.date_incurred)}</td>
             <td>Step ${approval.step}</td>
             <td>
-                <a href="/expenses/${approval.expense.id}" class="btn btn-sm btn-primary">
+                <a href="/expenses/${approval.expense.id}" class="btn btn-sm btn-primary btn-elevated">
                     <i class="fas fa-check-circle"></i> Review
                 </a>
             </td>
