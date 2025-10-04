@@ -10,9 +10,6 @@
             <p class="subtitle">Manage company settings and users</p>
         </div>
         <div class="dashboard-actions">
-            <button onclick="showInviteModal()" class="btn btn-primary btn-elevated">
-                <i class="fas fa-user-plus"></i> Invite User
-            </button>
             <a href="/admin/config" class="btn btn-outline">
                 <i class="fas fa-cog"></i> Configure Approvals
             </a>
@@ -44,7 +41,12 @@
     </div>
     
     <div class="table-container" data-animate="slide-up" style="--animate-delay: 200ms;">
-        <h2>Company Users</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;">Company Users</h2>
+            <button onclick="showInviteModal()" class="btn btn-primary btn-elevated">
+                <i class="fas fa-user-plus"></i> Invite User
+            </button>
+        </div>
         <table class="data-table" id="usersTable">
             <thead>
                 <tr>
@@ -64,7 +66,12 @@
     </div>
     
     <div class="table-container" data-animate="slide-up" style="--animate-delay: 300ms;">
-        <h2>All Expenses</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;">All Expenses</h2>
+            <a href="/expenses/new" class="btn btn-primary btn-elevated">
+                <i class="fas fa-plus"></i> New Expense
+            </a>
+        </div>
         <table class="data-table" id="expensesTable">
             <thead>
                 <tr>
