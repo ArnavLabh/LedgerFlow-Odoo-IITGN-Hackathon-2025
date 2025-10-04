@@ -61,6 +61,11 @@
 let isDraft = false;
 let isSubmitting = false;
 
+// Check authentication on page load
+if (!localStorage.getItem('access_token')) {
+    window.location.href = '/login';
+}
+
 // Set max date to today
 document.getElementById('dateIncurred').max = new Date().toISOString().split('T')[0];
 
@@ -73,6 +78,14 @@ async function saveDraft() {
 async function submitExpense() {
     if (isSubmitting) return;
     isSubmitting = true;
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        showToast('Please log in to submit expenses', 'error');
+        window.location.href = '/login';
+        return;
+    }
     
     // Disable buttons
     const submitBtn = document.querySelector('button[type="submit"]');
