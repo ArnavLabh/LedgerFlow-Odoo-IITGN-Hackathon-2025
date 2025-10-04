@@ -143,18 +143,25 @@ def delete_expense(current_user, expense_id):
 @token_required
 def submit_expense(current_user, expense_id):
     """Submit expense for approval"""
-    expense = Expense.query.get(expense_id)
-    
-    if not expense:
-        return jsonify({'error': 'Expense not found'}), 404
-    
-    if expense.created_by != current_user.id:
-        return jsonify({'error': 'Access denied'}), 403
-    
-    if expense.status != ExpenseStatus.DRAFT:
-        return jsonify({'error': 'Expense already submitted'}), 400
-    
-    # Create approval chain
-    ApprovalEngine.create_approval_chain(expense)
-    
-    return jsonify(expense.to_dict(include_approvals=True))
+    try:
+        expense = Expense.query.get(expense_id)
+        
+        if not expense:
+            return jsonify({'error': 'Expense not found'}), 404
+        
+        if expense.created_by != current_user.id:
+            return jsonify({'error': 'Access denied'}), 403
+        
+        if expense.status != ExpenseStatus.DRAFT:
+            return jsonify({'error': 'Expense already submitted'}), 400
+        
+        # Create approval chain
+        ApprovalEngine.create_approval_chain(expense)
+        
+        # Refresh the expense object to get updated status
+        db.session.refresh(expense)
+        
+        return jsonify(expense.to_dict(include_approvals=True))
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to submit expense: {str(e)}'}), 500
