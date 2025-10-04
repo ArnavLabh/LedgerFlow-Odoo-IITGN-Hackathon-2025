@@ -227,9 +227,8 @@ def google_oauth_callback():
         access_token = generate_access_token(user.id, user.company_id, user.role.value)
         refresh_token = generate_refresh_token(user.id)
         
-        # Redirect directly to dashboard
-        frontend_url = current_app.config['FRONTEND_ORIGIN']
-        redirect_url = f"{frontend_url}/dashboard"
+        # Redirect directly to dashboard - use current request host
+        redirect_url = f"{request.scheme}://{request.host}/dashboard"
         
         # Set both tokens in cookies and redirect
         from flask import redirect
