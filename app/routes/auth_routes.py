@@ -43,7 +43,8 @@ def signup():
                 password_hash=hash_password(data['password']),
                 full_name=data['full_name'],
                 role=invite.role,
-                company_id=invite.company_id
+                company_id=invite.company_id,
+                department=data.get('department')
             )
             db.session.add(user)
             invite.accepted = True
@@ -59,12 +60,14 @@ def signup():
             db.session.add(company)
             db.session.flush()  # Get company ID
             
+            # For new company signup, always create as Admin
             user = User(
                 email=data['email'],
                 password_hash=hash_password(data['password']),
                 full_name=data['full_name'],
                 role=UserRole.ADMIN,
-                company_id=company.id
+                company_id=company.id,
+                department=data.get('department', 'Management')
             )
             db.session.add(user)
             db.session.commit()
