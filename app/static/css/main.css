@@ -57,6 +57,11 @@ body {
     color: var(--color-white);
 }
 
+.logo-img {
+    height: 40px;
+    width: auto;
+}
+
 .nav {
     display: flex;
     gap: 1rem;
