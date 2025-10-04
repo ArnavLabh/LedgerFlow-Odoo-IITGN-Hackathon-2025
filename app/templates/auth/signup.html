@@ -3,100 +3,212 @@
 {% block title %}Sign Up - LedgerFlow{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1><i class="fas fa-receipt"></i> LedgerFlow</h1>
-            <p>Create your account</p>
-        </div>
-        
-        <form id="signupForm" class="auth-form">
-            {% if invite_token %}
-            <input type="hidden" id="inviteToken" value="{{ invite_token }}">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> You've been invited to join a company
+<section class="auth-shell" data-animate="fade-up">
+    <div class="auth-panel">
+        <div class="auth-panel__accent"></div>
+        <div class="auth-panel__content">
+            <div class="auth-brand">
+                <span class="auth-brand__glow"></span>
+                <h1><img src="{{ url_for('static', filename='img/logo.png') }}" alt="LedgerFlow" class="auth-logo"> LedgerFlow</h1>
+                <p class="auth-brand__subtitle">Create your account</p>
             </div>
-            {% endif %}
-            
-            <div class="form-group">
-                <label for="fullName"><i class="fas fa-user"></i> Full Name</label>
-                <input type="text" id="fullName" class="form-input" required>
+
+            <div class="auth-theme">
+                <button class="theme-toggle" type="button" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun theme-icon theme-icon--sun"></i>
+                    <span class="theme-toggle__track">
+                        <span class="theme-toggle__thumb"></span>
+                    </span>
+                    <i class="fas fa-moon theme-icon theme-icon--moon"></i>
+                </button>
             </div>
-            
-            <div class="form-group">
-                <label for="email"><i class="fas fa-envelope"></i> Email</label>
-                <input type="email" id="email" class="form-input" required>
+
+            <form id="signupForm" class="auth-form" novalidate>
+                {% if invite_token %}
+                <input type="hidden" id="inviteToken" value="{{ invite_token }}">
+                <div class="form-banner" data-animate="slide-up" data-delay="50">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <p class="form-banner__title">Invitation detected</p>
+                        <p class="form-banner__subtitle">You're joining a team on LedgerFlow.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    <div class="form-field" data-animate="slide-up">
+                        <label for="fullName" class="form-label"><i class="fas fa-user"></i> Full Name</label>
+                        <div class="form-control">
+                            <input type="text" id="fullName" class="form-input" placeholder="Your full name" autocomplete="name" required>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-field" data-animate="slide-up" data-delay="75">
+                        <label for="email" class="form-label"><i class="fas fa-envelope"></i> Email</label>
+                        <div class="form-control">
+                            <input type="email" id="email" class="form-input" placeholder="you@company.com" autocomplete="email" required>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
+
+                    {% if not invite_token %}
+                    <div class="form-field" data-animate="slide-up" data-delay="100">
+                        <label for="companyName" class="form-label"><i class="fas fa-building"></i> Company Name</label>
+                        <div class="form-control">
+                            <input type="text" id="companyName" class="form-input" placeholder="Your company" autocomplete="organization" required>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-field" data-animate="slide-up" data-delay="125">
+                        <label for="password" class="form-label"><i class="fas fa-lock"></i> Password</label>
+                        <div class="form-control">
+                            <input type="password" id="password" class="form-input" placeholder="Create a password" autocomplete="new-password" required>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-field" data-animate="slide-up" data-delay="150">
+                        <label for="confirmPassword" class="form-label"><i class="fas fa-lock"></i> Confirm Password</label>
+                        <div class="form-control">
+                            <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat your password" autocomplete="new-password" required>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-field form-terms" data-animate="slide-up" data-delay="175">
+                    <label class="checkbox">
+                        <input type="checkbox" id="acceptTerms" class="checkbox-input" required>
+                        <span class="checkbox-shape"></span>
+                        <span class="checkbox-label">I agree to the <a href="/terms" class="inline-link">Terms</a> and <a href="/privacy" class="inline-link">Privacy Policy</a></span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-elevated" data-animate="slide-up" data-delay="200">
+                    <span class="btn-glow"></span>
+                    <i class="fas fa-user-plus"></i> Create account
+                </button>
+
+                <div class="divider" data-animate="fade-in" data-delay="250">
+                    <span>OR</span>
+                </div>
+
+                <button type="button" onclick="loginWithGoogle()" class="btn btn-google btn-block btn-outline" data-animate="slide-up" data-delay="300">
+                    <i class="fab fa-google"></i> Sign up with Google
+                </button>
+            </form>
+
+            <div class="auth-footer" data-animate="fade-in" data-delay="350">
+                <p>Already have an account? <a href="/login">Log in</a></p>
             </div>
-            
-            {% if not invite_token %}
-            <div class="form-group">
-                <label for="companyName"><i class="fas fa-building"></i> Company Name</label>
-                <input type="text" id="companyName" class="form-input" required>
-            </div>
-            {% endif %}
-            
-            <div class="form-group">
-                <label for="password"><i class="fas fa-lock"></i> Password</label>
-                <input type="password" id="password" class="form-input" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="confirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
-                <input type="password" id="confirmPassword" class="form-input" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary btn-block">
-                <i class="fas fa-user-plus"></i> Sign Up
-            </button>
-            
-            <div class="divider">OR</div>
-            
-            <button type="button" onclick="loginWithGoogle()" class="btn btn-google btn-block">
-                <i class="fab fa-google"></i> Sign up with Google
-            </button>
-        </form>
-        
-        <div class="auth-footer">
-            <p>Already have an account? <a href="/login">Login</a></p>
         </div>
     </div>
-</div>
+</section>
 
 <script>
-document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+let storedTheme = localStorage.getItem('ledgerflow-theme');
+const rootElement = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+
+function setTheme(theme) {
+    rootElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ledgerflow-theme', theme);
+    storedTheme = theme;
+}
+
+function initTheme() {
+    if (storedTheme) {
+        setTheme(storedTheme);
+    } else if (prefersDark.matches) {
+        setTheme('dark');
+    } else {
+        setTheme('light');
+    }
+    updateToggleState();
+}
+
+function toggleTheme() {
+    const currentTheme = rootElement.getAttribute('data-theme') || 'light';
+    const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    updateToggleState();
+}
+
+themeToggle?.addEventListener('click', toggleTheme);
+prefersDark.addEventListener('change', (event) => {
+    if (!storedTheme || storedTheme === 'system') {
+        setTheme(event.matches ? 'dark' : 'light');
+        updateToggleState();
+    }
+});
+
+function updateToggleState() {
+    const isDark = rootElement.getAttribute('data-theme') === 'dark';
+    themeToggle?.classList.toggle('is-dark', isDark);
+}
+
+initTheme();
+
+const animatedElements = document.querySelectorAll('[data-animate]');
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+            const delay = entry.target.getAttribute('data-delay');
+            if (delay) {
+                entry.target.style.setProperty('--animate-delay', `${delay}ms`);
+            }
+            entry.target.classList.add('is-animated');
+            observer.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.15 });
+
+animatedElements.forEach((element) => observer.observe(element));
+
+document.getElementById('signupForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    
+
     if (password !== confirmPassword) {
         showToast('Passwords do not match', 'error');
         return;
     }
-    
+
+    if (!document.getElementById('acceptTerms').checked) {
+        showToast('Please accept the terms to continue', 'error');
+        return;
+    }
+
     const data = {
-        email: document.getElementById('email').value,
-        password: password,
-        full_name: document.getElementById('fullName').value
+        email: document.getElementById('email').value.trim(),
+        password,
+        full_name: document.getElementById('fullName').value.trim(),
     };
-    
+
     const inviteToken = document.getElementById('inviteToken');
     if (inviteToken) {
         data.invite_token = inviteToken.value;
     } else {
-        data.company_name = document.getElementById('companyName').value;
+        data.company_name = document.getElementById('companyName').value.trim();
     }
-    
+
     try {
         const response = await fetch('/api/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
+            document.body.classList.add('auth-success');
             localStorage.setItem('access_token', result.access_token);
             localStorage.setItem('user', JSON.stringify(result.user));
             showToast('Account created successfully!', 'success');
@@ -111,17 +223,17 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
 
 function loginWithGoogle() {
     const clientId = '759803622493-h0hmtcghuasnpn4i5g1qgi89uos1e2qb.apps.googleusercontent.com';
-    const redirectUri = window.location.origin + '/api/auth/oauth/google/callback';
+    const redirectUri = `${window.location.origin}/api/auth/oauth/google/callback`;
     const scope = 'openid email profile';
     const inviteToken = document.getElementById('inviteToken')?.value || '';
-    
+
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${clientId}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=code&` +
         `scope=${encodeURIComponent(scope)}&` +
         `state=${inviteToken}`;
-    
+
     window.location.href = authUrl;
 }
 </script>
