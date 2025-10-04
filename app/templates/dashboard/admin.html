@@ -3,22 +3,23 @@
 {% block title %}Admin Dashboard - LedgerFlow{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container" data-animate="fade-in">
     <div class="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <p class="subtitle">Manage company settings and users</p>
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p class="subtitle">Manage company settings and users</p>
+        </div>
+        <div class="dashboard-actions">
+            <button onclick="showInviteModal()" class="btn btn-primary btn-elevated">
+                <i class="fas fa-user-plus"></i> Invite User
+            </button>
+            <a href="/admin/config" class="btn btn-outline">
+                <i class="fas fa-cog"></i> Configure Approvals
+            </a>
+        </div>
     </div>
     
-    <div class="dashboard-actions">
-        <button onclick="showInviteModal()" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> Invite User
-        </button>
-        <a href="/admin/config" class="btn btn-secondary">
-            <i class="fas fa-cog"></i> Configure Approvals
-        </a>
-    </div>
-    
-    <div class="dashboard-stats">
+    <div class="dashboard-stats" data-animate="slide-up" style="--animate-delay: 100ms;">
         <div class="stat-card">
             <i class="fas fa-users stat-icon"></i>
             <div class="stat-content">
@@ -42,7 +43,7 @@
         </div>
     </div>
     
-    <div class="table-container">
+    <div class="table-container" data-animate="slide-up" style="--animate-delay: 200ms;">
         <h2>Company Users</h2>
         <table class="data-table" id="usersTable">
             <thead>
@@ -62,7 +63,7 @@
         </table>
     </div>
     
-    <div class="table-container" style="margin-top: 2rem;">
+    <div class="table-container" data-animate="slide-up" style="--animate-delay: 300ms;">
         <h2>All Expenses</h2>
         <table class="data-table" id="expensesTable">
             <thead>
@@ -85,8 +86,8 @@
 </div>
 
 <!-- Invite Modal -->
-<div id="inviteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 500px;">
+<div id="inviteModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
         <h2>Invite New User</h2>
         <form id="inviteForm" class="auth-form" style="margin-top: 1rem;">
             <div class="form-group">
@@ -105,11 +106,11 @@
                     <option value="ADMIN">Admin</option>
                 </select>
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button type="button" onclick="closeInviteModal()" class="btn btn-secondary">
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeInviteModal()" class="btn btn-outline" style="flex: 1;">
                     Cancel
                 </button>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary btn-elevated" style="flex: 1;">
                     Send Invite
                 </button>
             </div>
@@ -118,6 +119,19 @@
 </div>
 
 <script>
+// Animate on scroll
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-animated');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+});
+
 let users = [];
 let expenses = [];
 

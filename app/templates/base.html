@@ -55,6 +55,15 @@
                     </div>
                 </div>
                 
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <i class="fas fa-sun theme-icon theme-icon--sun"></i>
+                    <div class="theme-toggle__track">
+                        <div class="theme-toggle__thumb"></div>
+                    </div>
+                    <i class="fas fa-moon theme-icon theme-icon--moon"></i>
+                </button>
+                
                 <!-- User Menu -->
                 <div class="user-menu">
                     <button class="user-btn" onclick="toggleUserMenu()">
@@ -86,6 +95,28 @@
     
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const toggle = document.querySelector('.theme-toggle');
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            toggle.classList.toggle('is-dark', !isDark);
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        }
+        
+        // Load saved theme
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const toggle = document.querySelector('.theme-toggle');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark' && toggle) {
+                toggle.classList.add('is-dark');
+            }
+        })();
+    </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

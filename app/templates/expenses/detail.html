@@ -3,47 +3,47 @@
 {% block title %}Expense Detail - LedgerFlow{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container" data-animate="fade-in">
     <div class="dashboard-header">
         <h1>Expense Details</h1>
-        <button onclick="window.history.back()" class="btn btn-secondary">
+        <button onclick="window.history.back()" class="btn btn-outline">
             <i class="fas fa-arrow-left"></i> Back
         </button>
     </div>
     
     <div id="expenseContent" style="display: none;">
-        <div class="expense-form-container">
+        <div class="expense-form-container" data-animate="slide-up" style="--animate-delay: 100ms;">
             <div class="expense-form">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Amount</label>
-                        <p id="expenseAmount" style="font-size: 1.5rem; font-weight: 700; color: var(--color-teal);"></p>
+                        <p id="expenseAmount" style="font-size: 2rem; font-weight: 700; color: var(--color-teal); margin-top: 0.5rem;"></p>
                     </div>
                     <div class="form-group">
                         <label>Status</label>
-                        <p id="expenseStatus"></p>
+                        <p id="expenseStatus" style="margin-top: 0.5rem;"></p>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Category</label>
-                        <p id="expenseCategory"></p>
+                        <p id="expenseCategory" style="margin-top: 0.5rem; color: var(--text-primary);"></p>
                     </div>
                     <div class="form-group">
                         <label>Date Incurred</label>
-                        <p id="expenseDate"></p>
+                        <p id="expenseDate" style="margin-top: 0.5rem; color: var(--text-primary);"></p>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Description</label>
-                    <p id="expenseDescription"></p>
+                    <p id="expenseDescription" style="margin-top: 0.5rem; color: var(--text-primary);"></p>
                 </div>
                 
                 <div class="form-group">
                     <label>Submitted By</label>
-                    <p id="expenseCreator"></p>
+                    <p id="expenseCreator" style="margin-top: 0.5rem; color: var(--text-primary);"></p>
                 </div>
             </div>
         </div>
@@ -52,17 +52,17 @@
             <h2>Approval History</h2>
             <div id="approvalChain"></div>
             
-            <div id="approvalActions" style="margin-top: 2rem; display: none;">
-                <h3>Your Action Required</h3>
+            <div id="approvalActions" style="margin-top: 2rem; display: none; padding: 1.5rem; background: var(--bg-accent); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Your Action Required</h3>
                 <div class="form-group">
                     <label for="comments">Comments (optional)</label>
-                    <textarea id="comments" class="form-textarea" placeholder="Add your comments"></textarea>
+                    <textarea id="comments" class="form-textarea" placeholder="Add your comments" style="margin-top: 0.5rem;"></textarea>
                 </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button onclick="makeDecision('APPROVED')" class="btn btn-success">
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <button onclick="makeDecision('APPROVED')" class="btn btn-success btn-elevated" style="flex: 1; min-width: 150px;">
                         <i class="fas fa-check"></i> Approve
                     </button>
-                    <button onclick="makeDecision('REJECTED')" class="btn btn-danger">
+                    <button onclick="makeDecision('REJECTED')" class="btn btn-danger btn-elevated" style="flex: 1; min-width: 150px;">
                         <i class="fas fa-times"></i> Reject
                     </button>
                 </div>
@@ -76,6 +76,19 @@
 </div>
 
 <script>
+// Animate on scroll
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-animated');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+});
+
 let expense = null;
 let currentApproval = null;
 
