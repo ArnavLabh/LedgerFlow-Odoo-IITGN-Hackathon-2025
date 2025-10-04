@@ -109,7 +109,7 @@
         
         // Load saved theme
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('theme') || 'dark';
             const toggle = document.querySelector('.theme-toggle');
             document.documentElement.setAttribute('data-theme', savedTheme);
             if (savedTheme === 'dark' && toggle) {
