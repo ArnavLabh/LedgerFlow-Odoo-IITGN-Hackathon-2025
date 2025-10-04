@@ -94,11 +94,16 @@ async function submitExpense() {
     
     // Authentication is handled by the server via cookies
     
-    // Disable buttons
+    // Disable buttons and show loading
     const submitBtn = document.querySelector('button[type="submit"]');
     const draftBtn = document.querySelector('button[onclick="saveDraft()"]');
+    const originalSubmitText = submitBtn.innerHTML;
+    const originalDraftText = draftBtn.innerHTML;
+    
     submitBtn.disabled = true;
     draftBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    draftBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
     const data = {
         amount: parseFloat(document.getElementById('amount').value),
@@ -173,7 +178,12 @@ async function submitExpense() {
             showToast('Expense saved as draft', 'success');
         }
         
-        setTimeout(() => window.location.href = '/expenses', 1500);
+        // Reload expense list instead of redirecting
+        if (window.location.pathname === '/expenses') {
+            window.location.reload();
+        } else {
+            setTimeout(() => window.location.href = '/expenses', 1500);
+        }
         
     } catch (error) {
         console.error('Error submitting expense:', error);
@@ -188,6 +198,8 @@ function resetButtons() {
     const draftBtn = document.querySelector('button[onclick="saveDraft()"]');
     submitBtn.disabled = false;
     draftBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Approval';
+    draftBtn.innerHTML = '<i class="fas fa-save"></i> Save as Draft';
 }
 
 document.getElementById('expenseForm').addEventListener('submit', async (e) => {

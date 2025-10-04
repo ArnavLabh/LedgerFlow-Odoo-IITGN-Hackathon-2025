@@ -103,6 +103,14 @@ def admin_users():
         return redirect(url_for('main.dashboard'))
     return render_template('admin/users.html', user=user)
 
+@main_bp.route('/profile')
+def profile():
+    """User profile page"""
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('main.login'))
+    return render_template('profile.html', user=user)
+
 @main_bp.route('/notifications')
 def notifications():
     """Notifications page"""

@@ -29,25 +29,32 @@ async function fetchWithAuth(url, options = {}) {
         defaultOptions.headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(url, defaultOptions);
-    
-    // Handle 401 - try to refresh token
-    if (response.status === 401) {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-            // Retry the request with new token
-            const newToken = getAccessToken();
-            if (newToken) {
-                defaultOptions.headers['Authorization'] = `Bearer ${newToken}`;
+    try {
+        const response = await fetch(url, defaultOptions);
+        
+        // Handle 401 - try to refresh token
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                // Retry the request with new token
+                const newToken = getAccessToken();
+                if (newToken) {
+                    defaultOptions.headers['Authorization'] = `Bearer ${newToken}`;
+                }
+                return fetch(url, defaultOptions);
+            } else {
+                window.location.href = '/login';
+                throw new Error('Authentication failed');
             }
-            return fetch(url, defaultOptions);
-        } else {
-            window.location.href = '/login';
-            throw new Error('Authentication failed');
         }
+        
+        return response;
+    } catch (error) {
+        // Prevent page refresh on network errors
+        console.error('Network error:', error);
+        showToast('Network error. Please check your connection.', 'error');
+        throw error;
     }
-    
-    return response;
 }
 
 // Refresh access token

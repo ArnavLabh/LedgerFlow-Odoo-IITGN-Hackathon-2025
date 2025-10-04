@@ -412,3 +412,30 @@ def logout(current_user):
     response.set_cookie('access_token', '', expires=0)
     
     return response
+
+@auth_bp.route('/check-company-admin', methods=['POST'])
+def check_company_admin():
+    """Check if admin exists for company"""
+    try:
+        data = request.get_json()
+        company_name = data.get('company_name', '').strip()
+        
+        if not company_name:
+            return jsonify({'admin_exists': False})
+        
+        from app.models import Company, UserRole
+        
+        # Check if company exists and has admin
+        company = Company.query.filter_by(name=company_name).first()
+        if company:
+            admin_exists = User.query.filter_by(
+                company_id=company.id,
+                role=UserRole.ADMIN,
+                is_active=True
+            ).first() is not None
+            return jsonify({'admin_exists': admin_exists})
+        
+        return jsonify({'admin_exists': False})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

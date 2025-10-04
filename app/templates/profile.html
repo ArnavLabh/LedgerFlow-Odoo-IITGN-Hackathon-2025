@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>My Profile</h1>
+            <p class="subtitle">Manage your account information</p>
+        </div>
+    </div>
+    
+    <div class="profile-container">
+        <div class="profile-card glass-card">
+            <div class="profile-avatar">
+                {{ user.full_name[0].upper() }}
+            </div>
+            
+            <form id="profileForm" class="profile-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" class="form-input" value="{{ user.full_name }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-input" value="{{ user.email }}" readonly>
+                        <small class="form-help">Email cannot be changed</small>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <input type="text" id="role" class="form-input" value="{{ user.role }}" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company">Company</label>
+                        <input type="text" id="company" class="form-input" value="{{ user.company.name if user.company else 'No Company' }}" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <input type="text" id="department" class="form-input" value="{{ user.department or '' }}" placeholder="e.g., Engineering, Sales">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="password-card glass-card">
+            <h3>Change Password</h3>
+            <form id="passwordForm" class="password-form">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-outline">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    display: grid;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.profile-card {
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 2rem auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-help {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.password-card h3 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        full_name: document.getElementById('fullName').value,
+        department: document.getElementById('department').value
+    };
+    
+    try {
+        const response = await fetchWithAuth('/api/users/me', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showToast('Profile updated successfully!', 'success');
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to update profile', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        showToast('Failed to update profile', 'error');
+    }
+});
+
+document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+    
+    const data = {
+        current_password: document.getElementById('currentPassword').value,
+        new_password: newPassword
+    };
+    
+    try {
+        const response = await fetchWithAuth('/api/users/me/password', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showToast('Password changed successfully!', 'success');
+            document.getElementById('passwordForm').reset();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to change password', 'error');
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        showToast('Failed to change password', 'error');
+    }
+});
+</script>
+{% endblock %}

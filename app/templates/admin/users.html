@@ -30,8 +30,23 @@
         </div>
         <form id="inviteForm">
             <div class="form-group">
+                <label for="inviteType">Invitation Type *</label>
+                <select id="inviteType" class="form-select" required>
+                    <option value="email">New User (Email)</option>
+                    <option value="existing">Existing User</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="emailGroup">
                 <label for="inviteEmail">Email Address *</label>
                 <input type="email" id="inviteEmail" class="form-input" required>
+            </div>
+            
+            <div class="form-group" id="userGroup" style="display: none;">
+                <label for="existingUser">Select User *</label>
+                <select id="existingUser" class="form-select">
+                    <option value="">Loading users...</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="inviteRole">Role *</label>
@@ -208,9 +223,39 @@ function renderUsers() {
     `).join('');
 }
 
+async function loadExistingUsers() {
+    try {
+        const response = await fetchWithAuth('/api/users/all');
+        if (response.ok) {
+            const allUsers = await response.json();
+            const select = document.getElementById('existingUser');
+            select.innerHTML = '<option value="">Select user</option>' + 
+                allUsers.map(user => `<option value="${user.email}">${user.full_name} (${user.email})</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Error loading existing users:', error);
+    }
+}
+
 function showInviteModal() {
     document.getElementById('inviteModal').style.display = 'flex';
+    loadExistingUsers();
 }
+
+document.getElementById('inviteType').addEventListener('change', (e) => {
+    const emailGroup = document.getElementById('emailGroup');
+    const userGroup = document.getElementById('userGroup');
+    
+    if (e.target.value === 'existing') {
+        emailGroup.style.display = 'none';
+        userGroup.style.display = 'block';
+        document.getElementById('inviteEmail').required = false;
+    } else {
+        emailGroup.style.display = 'block';
+        userGroup.style.display = 'none';
+        document.getElementById('inviteEmail').required = true;
+    }
+});
 
 function hideInviteModal() {
     document.getElementById('inviteModal').style.display = 'none';

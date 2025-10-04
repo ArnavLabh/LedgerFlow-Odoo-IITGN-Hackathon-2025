@@ -60,6 +60,25 @@
                             <span class="form-focus"></span>
                         </div>
                     </div>
+                    
+                    <div class="form-field" data-animate="slide-up" data-delay="110" id="roleField" style="display: none;">
+                        <label for="role" class="form-label"><i class="fas fa-user-tag"></i> Role</label>
+                        <div class="form-control">
+                            <select id="role" class="form-input">
+                                <option value="Employee">Employee</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Director">Director</option>
+                                <option value="CFO">CFO</option>
+                            </select>
+                            <span class="form-focus"></span>
+                        </div>
+                    </div>
+                    
+                    <div id="adminExistsAlert" class="alert alert-info" style="display: none;">
+                        <i class="fas fa-info-circle"></i>
+                        Admin already exists for this company. Please select your role.
+                    </div>
                     {% endif %}
 
                     <div class="form-field" data-animate="slide-up" data-delay="125">
@@ -153,6 +172,32 @@ function updateToggleState() {
 
 initTheme();
 
+// Company admin check
+document.getElementById('companyName')?.addEventListener('blur', async (e) => {
+    const companyName = e.target.value.trim();
+    if (!companyName) return;
+    
+    try {
+        const response = await fetch('/api/auth/check-company-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ company_name: companyName })
+        });
+        
+        const result = await response.json();
+        
+        if (result.admin_exists) {
+            document.getElementById('roleField').style.display = 'block';
+            document.getElementById('adminExistsAlert').style.display = 'block';
+        } else {
+            document.getElementById('roleField').style.display = 'none';
+            document.getElementById('adminExistsAlert').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking company admin:', error);
+    }
+});
+
 const animatedElements = document.querySelectorAll('[data-animate]');
 const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -196,6 +241,10 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
         data.invite_token = inviteToken.value;
     } else {
         data.company_name = document.getElementById('companyName').value.trim();
+        const roleField = document.getElementById('role');
+        if (roleField.style.display !== 'none') {
+            data.role = roleField.value;
+        }
     }
 
     try {
