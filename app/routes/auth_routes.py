@@ -15,16 +15,18 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     """Sign up new user and create company"""
-    data = request.get_json()
-    
-    # Validate required fields
-    required_fields = ['email', 'password', 'full_name']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing required fields'}), 400
-    
-    # Check if user already exists
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error': 'Email already registered'}), 400
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['email', 'password', 'full_name']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=data['email']).first()
+        if existing_user:
+            return jsonify({'error': 'Email already registered'}), 400
     
     # Check for invite token
     invite_token = data.get('invite_token')
@@ -87,6 +89,12 @@ def signup():
     )
     
     return response, 201
+    
+    except Exception as e:
+        # Log the error for debugging
+        current_app.logger.error(f'Signup error: {str(e)}')
+        db.session.rollback()
+        return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -127,9 +135,93 @@ def login():
     
     return response
 
+@auth_bp.route('/oauth/google/callback', methods=['GET'])
+def google_oauth_callback():
+    """Handle Google OAuth callback redirect"""
+    code = request.args.get('code')
+    error = request.args.get('error')
+    
+    if error:
+        return jsonify({'error': f'OAuth error: {error}'}), 400
+    
+    if not code:
+        return jsonify({'error': 'Authorization code required'}), 400
+    
+    # Exchange code for tokens
+    token_url = 'https://oauth2.googleapis.com/token'
+    token_data = {
+        'code': code,
+        'client_id': current_app.config['GOOGLE_OAUTH_CLIENT_ID'],
+        'client_secret': current_app.config['GOOGLE_OAUTH_CLIENT_SECRET'],
+        'redirect_uri': current_app.config['OAUTH_REDIRECT_URI'],
+        'grant_type': 'authorization_code'
+    }
+    
+    try:
+        token_response = requests.post(token_url, data=token_data)
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        
+        # Get user info
+        userinfo_url = 'https://www.googleapis.com/oauth2/v2/userinfo'
+        headers = {'Authorization': f"Bearer {tokens['access_token']}"}
+        userinfo_response = requests.get(userinfo_url, headers=headers)
+        userinfo_response.raise_for_status()
+        user_info = userinfo_response.json()
+        
+        # Check if user exists
+        user = User.query.filter_by(email=user_info['email']).first()
+        
+        if not user:
+            # Create new company and admin user
+            company = Company(
+                name=f"{user_info.get('name', 'Company')}'s Company",
+                default_currency='INR'
+            )
+            db.session.add(company)
+            db.session.flush()
+            
+            user = User(
+                email=user_info['email'],
+                full_name=user_info.get('name', user_info['email']),
+                role=UserRole.ADMIN,
+                company_id=company.id,
+                oauth_provider='google',
+                oauth_id=user_info['id']
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        # Generate our app tokens
+        access_token = generate_access_token(user.id, user.company_id, user.role.value)
+        refresh_token = generate_refresh_token(user.id)
+        
+        # Redirect to frontend with tokens (you may want to adjust this URL)
+        frontend_url = current_app.config['FRONTEND_ORIGIN']
+        redirect_url = f"{frontend_url}/auth/success?access_token={access_token}"
+        
+        # Set refresh token in cookie and redirect
+        from flask import redirect
+        response = redirect(redirect_url)
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=current_app.config['PLATFORM'] == 'vercel',
+            samesite='Lax',
+            max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        )
+        
+        return response
+        
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'OAuth error: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
 @auth_bp.route('/oauth/google', methods=['POST'])
 def google_oauth():
-    """Exchange Google OAuth code for tokens"""
+    """Exchange Google OAuth code for tokens (API endpoint)"""
     data = request.get_json()
     code = data.get('code')
     

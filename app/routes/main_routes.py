@@ -22,6 +22,15 @@ def login():
     """Login page"""
     return render_template('auth/login.html')
 
+@main_bp.route('/auth/success')
+def auth_success():
+    """OAuth success page - handles token from URL params"""
+    token = request.args.get('access_token')
+    if token:
+        return render_template('auth/success.html', access_token=token)
+    else:
+        return redirect(url_for('main.login'))
+
 @main_bp.route('/dashboard')
 def dashboard():
     """Dashboard - role-based view"""

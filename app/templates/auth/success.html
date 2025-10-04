@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication Success - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1><i class="fas fa-check-circle" style="color: #28a745;"></i> Authentication Successful</h1>
+            <p>You have been successfully authenticated with Google!</p>
+        </div>
+        
+        <div class="auth-body">
+            <p>Redirecting you to the dashboard...</p>
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        
+        <div class="auth-footer">
+            <p><a href="/dashboard">Click here if you're not redirected automatically</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get access token from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('access_token');
+    
+    if (accessToken) {
+        // Store the access token
+        localStorage.setItem('access_token', accessToken);
+        
+        // Fetch user info using the access token
+        fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+            
+            showToast('Login successful!', 'success');
+            
+            // Redirect to dashboard after a short delay
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1500);
+        })
+        .catch(error => {
+            console.error('Error fetching user info:', error);
+            showToast('Authentication completed, but there was an issue. Please try logging in again.', 'warning');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 3000);
+        });
+    } else {
+        showToast('No authentication token found. Redirecting to login.', 'error');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+    }
+});
+</script>
+
+<style>
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.auth-body {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.auth-body p {
+    margin-bottom: 1rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
