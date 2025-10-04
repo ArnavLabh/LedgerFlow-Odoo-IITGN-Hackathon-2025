@@ -167,6 +167,32 @@ function updateToggleState() {
 
 initTheme();
 
+// Company admin check
+document.getElementById('companyName')?.addEventListener('blur', async (e) => {
+    const companyName = e.target.value.trim();
+    if (!companyName) return;
+    
+    try {
+        const response = await fetch('/api/auth/check-company-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ company_name: companyName })
+        });
+        
+        const result = await response.json();
+        
+        if (result.admin_exists) {
+            document.getElementById('roleField').style.display = 'block';
+            document.getElementById('adminExistsAlert').style.display = 'block';
+        } else {
+            document.getElementById('roleField').style.display = 'none';
+            document.getElementById('adminExistsAlert').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking company admin:', error);
+    }
+});
+
 const animatedElements = document.querySelectorAll('[data-animate]');
 const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {

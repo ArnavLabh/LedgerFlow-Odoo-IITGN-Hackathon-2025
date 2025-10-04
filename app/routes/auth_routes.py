@@ -43,7 +43,8 @@ def signup():
                 password_hash=hash_password(data['password']),
                 full_name=data['full_name'],
                 role=invite.role,
-                company_id=invite.company_id
+                company_id=invite.company_id,
+                department=data.get('department')
             )
             db.session.add(user)
             invite.accepted = True
@@ -82,12 +83,14 @@ def signup():
                 db.session.add(company)
                 db.session.flush()  # Get company ID
             
+            # For new company signup, always create as Admin
             user = User(
                 email=data['email'],
                 password_hash=hash_password(data['password']),
                 full_name=data['full_name'],
-                role=role,
-                company_id=company.id
+                role=UserRole.ADMIN,
+                company_id=company.id,
+                department=data.get('department', 'Management')
             )
             db.session.add(user)
             db.session.commit()
@@ -250,9 +253,8 @@ def google_oauth_callback():
         access_token = generate_access_token(user.id, user.company_id, user.role.value)
         refresh_token = generate_refresh_token(user.id)
         
-        # Redirect directly to dashboard
-        frontend_url = current_app.config['FRONTEND_ORIGIN']
-        redirect_url = f"{frontend_url}/dashboard"
+        # Redirect directly to dashboard - use current request host
+        redirect_url = f"{request.scheme}://{request.host}/dashboard"
         
         # Set both tokens in cookies and redirect
         from flask import redirect
@@ -433,3 +435,30 @@ def logout(current_user):
     response.set_cookie('access_token', '', expires=0)
     
     return response
+
+@auth_bp.route('/check-company-admin', methods=['POST'])
+def check_company_admin():
+    """Check if admin exists for company"""
+    try:
+        data = request.get_json()
+        company_name = data.get('company_name', '').strip()
+        
+        if not company_name:
+            return jsonify({'admin_exists': False})
+        
+        from app.models import Company, UserRole
+        
+        # Check if company exists and has admin
+        company = Company.query.filter_by(name=company_name).first()
+        if company:
+            admin_exists = User.query.filter_by(
+                company_id=company.id,
+                role=UserRole.ADMIN,
+                is_active=True
+            ).first() is not None
+            return jsonify({'admin_exists': admin_exists})
+        
+        return jsonify({'admin_exists': False})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

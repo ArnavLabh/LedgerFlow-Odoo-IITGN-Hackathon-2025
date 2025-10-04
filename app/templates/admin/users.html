@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - LedgerFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>User Management</h1>
+            <p class="subtitle">Manage company users and permissions</p>
+        </div>
+        <button onclick="showInviteModal()" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Invite User
+        </button>
+    </div>
+    
+    <div class="users-grid">
+        <div class="users-list" id="usersList">
+            <!-- Users will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Invite User Modal -->
+<div id="inviteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Invite New User</h2>
+            <button onclick="hideInviteModal()" class="modal-close">&times;</button>
+        </div>
+        <form id="inviteForm">
+            <div class="form-group">
+                <label for="inviteType">Invitation Type *</label>
+                <select id="inviteType" class="form-select" required>
+                    <option value="email">New User (Email)</option>
+                    <option value="existing">Existing User</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="emailGroup">
+                <label for="inviteEmail">Email Address *</label>
+                <input type="email" id="inviteEmail" class="form-input" required>
+            </div>
+            
+            <div class="form-group" id="userGroup" style="display: none;">
+                <label for="existingUser">Select User *</label>
+                <select id="existingUser" class="form-select">
+                    <option value="">Loading users...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="inviteRole">Role *</label>
+                <select id="inviteRole" class="form-select" required>
+                    <option value="">Select role</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Director">Director</option>
+                    <option value="CFO">CFO</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="inviteDepartment">Department</label>
+                <input type="text" id="inviteDepartment" class="form-input" placeholder="e.g., Engineering, Sales">
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="hideInviteModal()" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-primary">Send Invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.users-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.user-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.user-info h3 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-color);
+}
+
+.user-info p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.user-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.role-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.role-admin { background: #ff6b6b; color: white; }
+.role-manager { background: #4ecdc4; color: white; }
+.role-finance { background: #45b7d1; color: white; }
+.role-director { background: #96ceb4; color: white; }
+.role-cfo { background: #feca57; color: white; }
+.role-employee { background: #ddd; color: #666; }
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+</style>
+
+<script>
+let users = [];
+
+async function loadUsers() {
+    try {
+        const response = await fetchWithAuth('/api/company/users');
+        if (response.ok) {
+            users = await response.json();
+            renderUsers();
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showToast('Failed to load users', 'error');
+    }
+}
+
+function renderUsers() {
+    const container = document.getElementById('usersList');
+    
+    if (users.length === 0) {
+        container.innerHTML = '<p class="empty-state">No users found</p>';
+        return;
+    }
+    
+    container.innerHTML = users.map(user => `
+        <div class="user-card">
+            <div class="user-avatar">
+                ${user.full_name.charAt(0).toUpperCase()}
+            </div>
+            <div class="user-info">
+                <h3>${user.full_name}</h3>
+                <p>${user.email}</p>
+                <span class="role-badge role-${user.role.toLowerCase()}">${user.role}</span>
+                ${user.department ? `<p>Department: ${user.department}</p>` : ''}
+            </div>
+            <div class="user-actions">
+                <button onclick="editUser('${user.id}')" class="btn btn-sm btn-outline">
+                    <i class="fas fa-edit"></i>
+                </button>
+                ${user.role !== 'Admin' ? `
+                    <button onclick="deactivateUser('${user.id}')" class="btn btn-sm btn-danger">
+                        <i class="fas fa-user-times"></i>
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadExistingUsers() {
+    try {
+        const response = await fetchWithAuth('/api/users/all');
+        if (response.ok) {
+            const allUsers = await response.json();
+            const select = document.getElementById('existingUser');
+            select.innerHTML = '<option value="">Select user</option>' + 
+                allUsers.map(user => `<option value="${user.email}">${user.full_name} (${user.email})</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Error loading existing users:', error);
+    }
+}
+
+function showInviteModal() {
+    document.getElementById('inviteModal').style.display = 'flex';
+    loadExistingUsers();
+}
+
+document.getElementById('inviteType').addEventListener('change', (e) => {
+    const emailGroup = document.getElementById('emailGroup');
+    const userGroup = document.getElementById('userGroup');
+    
+    if (e.target.value === 'existing') {
+        emailGroup.style.display = 'none';
+        userGroup.style.display = 'block';
+        document.getElementById('inviteEmail').required = false;
+    } else {
+        emailGroup.style.display = 'block';
+        userGroup.style.display = 'none';
+        document.getElementById('inviteEmail').required = true;
+    }
+});
+
+function hideInviteModal() {
+    document.getElementById('inviteModal').style.display = 'none';
+    document.getElementById('inviteForm').reset();
+}
+
+async function sendInvite(email, role, department) {
+    try {
+        const response = await fetchWithAuth('/api/company/invite', {
+            method: 'POST',
+            body: JSON.stringify({
+                email: email,
+                role: role,
+                department: department
+            })
+        });
+        
+        if (response.ok) {
+            showToast('Invitation sent successfully!', 'success');
+            hideInviteModal();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to send invitation', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending invite:', error);
+        showToast('Failed to send invitation', 'error');
+    }
+}
+
+async function editUser(userId) {
+    // TODO: Implement user editing
+    showToast('User editing coming soon', 'info');
+}
+
+async function deactivateUser(userId) {
+    if (!confirm('Are you sure you want to deactivate this user?')) return;
+    
+    try {
+        const response = await fetchWithAuth(`/api/admin/users/${userId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showToast('User deactivated successfully', 'success');
+            loadUsers();
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to deactivate user', 'error');
+        }
+    } catch (error) {
+        console.error('Error deactivating user:', error);
+        showToast('Failed to deactivate user', 'error');
+    }
+}
+
+document.getElementById('inviteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('inviteEmail').value;
+    const role = document.getElementById('inviteRole').value;
+    const department = document.getElementById('inviteDepartment').value;
+    
+    await sendInvite(email, role, department);
+});
+
+// Load users on page load
+document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{% endblock %}

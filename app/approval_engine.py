@@ -195,9 +195,10 @@ class ApprovalEngine:
         db.session.add(notification)
         
         # Notify company admins
+        from app.models import UserRole
         admins = User.query.filter_by(
             company_id=expense.company_id,
-            role='Admin',
+            role=UserRole.ADMIN,
             is_active=True
         ).all()
         

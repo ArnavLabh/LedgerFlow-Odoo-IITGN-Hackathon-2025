@@ -8,8 +8,8 @@ user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/me', methods=['GET'])
 @token_required
-def get_current_user(current_user):
-    """Get current user information"""
+def get_current_user_profile(current_user):
+    """Get current user profile"""
     return jsonify(current_user.to_dict(include_company=True))
 
 @user_bp.route('/all', methods=['GET'])

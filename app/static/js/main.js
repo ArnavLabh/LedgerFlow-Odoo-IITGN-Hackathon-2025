@@ -1,13 +1,20 @@
 // Global utilities and notification handling
 
-// Cookie-based authentication - no localStorage needed
+// Get access token from localStorage or cookies
 function getAccessToken() {
-    // Tokens are handled by cookies, return null to force cookie-based requests
+    // First try localStorage
+    let token = localStorage.getItem('access_token');
+    if (token) return token;
+    
+    // Fallback to checking if we have cookies (for OAuth users)
+    // The server will handle cookie-based auth
     return null;
 }
 
 // Fetch with authentication (cookie-based)
 async function fetchWithAuth(url, options = {}) {
+    const token = getAccessToken();
+    
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -17,15 +24,37 @@ async function fetchWithAuth(url, options = {}) {
         ...options
     };
     
-    const response = await fetch(url, defaultOptions);
-    
-    // Handle 401 - redirect to login
-    if (response.status === 401) {
-        window.location.href = '/login';
-        throw new Error('Authentication failed');
+    // Add Authorization header only if we have a token
+    if (token) {
+        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
     }
     
-    return response;
+    try {
+        const response = await fetch(url, defaultOptions);
+        
+        // Handle 401 - try to refresh token
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                // Retry the request with new token
+                const newToken = getAccessToken();
+                if (newToken) {
+                    defaultOptions.headers['Authorization'] = `Bearer ${newToken}`;
+                }
+                return fetch(url, defaultOptions);
+            } else {
+                window.location.href = '/login';
+                throw new Error('Authentication failed');
+            }
+        }
+        
+        return response;
+    } catch (error) {
+        // Prevent page refresh on network errors
+        console.error('Network error:', error);
+        showToast('Network error. Please check your connection.', 'error');
+        throw error;
+    }
 }
 
 // Refresh access token (for cookie-based auth, this is handled server-side)
@@ -213,20 +242,21 @@ document.addEventListener('click', (e) => {
 // Logout
 async function logout() {
     try {
-        // Call logout API to clear server-side cookies
+        // Call logout API
         await fetch('/api/auth/logout', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             credentials: 'include'
         });
     } catch (error) {
         console.error('Logout error:', error);
     }
     
-    // Redirect to login (server will clear cookies)
-    window.location.href = '/login';
+    // Clear local storage
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    
+    // Clear cookies by navigating to logout route
+    window.location.href = '/logout';
 }
 
 // Start polling when page loads (if user is logged in)
