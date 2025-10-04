@@ -99,41 +99,47 @@ def signup():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """Login with email and password"""
-    data = request.get_json()
-    
-    if not data.get('email') or not data.get('password'):
-        return jsonify({'error': 'Email and password required'}), 400
-    
-    user = User.query.filter_by(email=data['email']).first()
-    if not user or not user.password_hash:
-        return jsonify({'error': 'Invalid credentials'}), 401
-    
-    if not verify_password(data['password'], user.password_hash):
-        return jsonify({'error': 'Invalid credentials'}), 401
-    
-    if not user.is_active:
-        return jsonify({'error': 'Account is inactive'}), 403
-    
-    # Generate tokens
-    access_token = generate_access_token(user.id, user.company_id, user.role.value)
-    refresh_token = generate_refresh_token(user.id)
-    
-    # Set refresh token in httpOnly cookie
-    response = make_response(jsonify({
-        'access_token': access_token,
-        'user': user.to_dict(include_company=True)
-    }))
-    
-    response.set_cookie(
-        'refresh_token',
-        refresh_token,
-        httponly=True,
-        secure=current_app.config['PLATFORM'] == 'vercel',
-        samesite='Lax',
-        max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
-    )
-    
-    return response
+    try:
+        data = request.get_json()
+        
+        if not data.get('email') or not data.get('password'):
+            return jsonify({'error': 'Email and password required'}), 400
+        
+        user = User.query.filter_by(email=data['email']).first()
+        if not user or not user.password_hash:
+            return jsonify({'error': 'Invalid credentials'}), 401
+        
+        if not verify_password(data['password'], user.password_hash):
+            return jsonify({'error': 'Invalid credentials'}), 401
+        
+        if not user.is_active:
+            return jsonify({'error': 'Account is inactive'}), 403
+        
+        # Generate tokens
+        access_token = generate_access_token(user.id, user.company_id, user.role.value)
+        refresh_token = generate_refresh_token(user.id)
+        
+        # Set refresh token in httpOnly cookie
+        response = make_response(jsonify({
+            'access_token': access_token,
+            'user': user.to_dict(include_company=True)
+        }))
+        
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=current_app.config['PLATFORM'] == 'vercel',
+            samesite='Lax',
+            max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        )
+        
+        return response
+        
+    except Exception as e:
+        # Log the error for debugging
+        current_app.logger.error(f'Login error: {str(e)}')
+        return jsonify({'error': f'Login failed: {str(e)}'}), 500
 
 @auth_bp.route('/oauth/google/callback', methods=['GET'])
 def google_oauth_callback():

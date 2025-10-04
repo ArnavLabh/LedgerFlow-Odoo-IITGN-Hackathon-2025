@@ -13,12 +13,28 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = 30 * 24 * 60 * 60  # 30 days
     
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///ledgerflow.db'
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        # Fallback to SQLite for local development
+        database_url = 'sqlite:///ledgerflow.db'
+    
+    SQLALCHEMY_DATABASE_URI = database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-    }
+    
+    # Configure engine options based on database type
+    if database_url.startswith('postgresql'):
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
+            'connect_args': {
+                'connect_timeout': 10,
+                'application_name': 'ledgerflow'
+            }
+        }
+    else:
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_pre_ping': True,
+        }
     
     # Google OAuth
     GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
