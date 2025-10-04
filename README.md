@@ -91,7 +91,7 @@ A production-ready Flask-based expense management application with multi-tenant 
 
 ## 🏗️ Database Schema
 
-
+<img width="1806" height="1282" alt="Database Schema" src="https://github.com/user-attachments/assets/e86c30ef-6e3d-4a3e-9eb8-307db038ed40" />
 
 ### Tables
 
