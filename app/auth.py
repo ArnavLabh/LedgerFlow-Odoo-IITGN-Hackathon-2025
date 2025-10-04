@@ -65,12 +65,35 @@ def revoke_refresh_token(token):
     return False
 
 def get_current_user():
-    """Get current user from JWT token in request headers"""
+    """Get current user from JWT token in request headers or cookies"""
+    token = None
+    
+    # Check Authorization header first (for API requests)
     auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    
+    # Fallback to checking cookies (for browser requests)
+    if not token:
+        # Try to get access token from cookies
+        token = request.cookies.get('access_token')
+        
+        # If no access token in cookies, try to use refresh token to get user info
+        if not token:
+            refresh_token = request.cookies.get('refresh_token')
+            if refresh_token:
+                # Verify refresh token and get user
+                payload = verify_token(refresh_token)
+                if payload:
+                    # Check if refresh token is still valid in database
+                    refresh_record = RefreshToken.query.filter_by(token=refresh_token).first()
+                    if refresh_record and not refresh_record.revoked:
+                        user = User.query.get(payload['user_id'])
+                        return user
+    
+    if not token:
         return None
     
-    token = auth_header.split(' ')[1]
     payload = verify_token(token)
     if not payload:
         return None

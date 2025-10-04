@@ -79,6 +79,7 @@ def signup():
             'user': user.to_dict(include_company=True)
         }))
         
+        # Set both refresh and access token cookies
         response.set_cookie(
             'refresh_token',
             refresh_token,
@@ -86,6 +87,15 @@ def signup():
             secure=current_app.config['PLATFORM'] == 'vercel',
             samesite='Lax',
             max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        )
+        
+        response.set_cookie(
+            'access_token',
+            access_token,
+            httponly=True,
+            secure=current_app.config['PLATFORM'] == 'vercel',
+            samesite='Lax',
+            max_age=current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         )
         
         return response, 201
@@ -125,6 +135,7 @@ def login():
             'user': user.to_dict(include_company=True)
         }))
         
+        # Set both refresh and access token cookies
         response.set_cookie(
             'refresh_token',
             refresh_token,
@@ -132,6 +143,15 @@ def login():
             secure=current_app.config['PLATFORM'] == 'vercel',
             samesite='Lax',
             max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        )
+        
+        response.set_cookie(
+            'access_token',
+            access_token,
+            httponly=True,
+            secure=current_app.config['PLATFORM'] == 'vercel',
+            samesite='Lax',
+            max_age=current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         )
         
         return response
@@ -202,13 +222,14 @@ def google_oauth_callback():
         access_token = generate_access_token(user.id, user.company_id, user.role.value)
         refresh_token = generate_refresh_token(user.id)
         
-        # Redirect to frontend with tokens (you may want to adjust this URL)
+        # Redirect directly to dashboard
         frontend_url = current_app.config['FRONTEND_ORIGIN']
-        redirect_url = f"{frontend_url}/auth/success?access_token={access_token}"
+        redirect_url = f"{frontend_url}/dashboard"
         
-        # Set refresh token in cookie and redirect
+        # Set both tokens in cookies and redirect
         from flask import redirect
         response = redirect(redirect_url)
+        
         response.set_cookie(
             'refresh_token',
             refresh_token,
@@ -216,6 +237,15 @@ def google_oauth_callback():
             secure=current_app.config['PLATFORM'] == 'vercel',
             samesite='Lax',
             max_age=current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        )
+        
+        response.set_cookie(
+            'access_token',
+            access_token,
+            httponly=True,
+            secure=current_app.config['PLATFORM'] == 'vercel',
+            samesite='Lax',
+            max_age=current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         )
         
         return response
@@ -360,6 +390,8 @@ def logout(current_user):
         revoke_refresh_token(refresh_token)
     
     response = make_response(jsonify({'message': 'Logged out successfully'}))
+    # Clear both tokens
     response.set_cookie('refresh_token', '', expires=0)
+    response.set_cookie('access_token', '', expires=0)
     
     return response

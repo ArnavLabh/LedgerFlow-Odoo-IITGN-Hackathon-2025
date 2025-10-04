@@ -203,14 +203,14 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
+            credentials: 'include',
         });
 
         const result = await response.json();
 
         if (response.ok) {
             document.body.classList.add('auth-success');
-            localStorage.setItem('access_token', result.access_token);
-            localStorage.setItem('user', JSON.stringify(result.user));
+            // Server has set authentication cookies, just show success and redirect
             showToast('Account created successfully!', 'success');
             setTimeout(() => window.location.href = '/dashboard', 1000);
         } else {

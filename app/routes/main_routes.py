@@ -14,12 +14,22 @@ def index():
 @main_bp.route('/signup')
 def signup():
     """Signup page"""
+    # Redirect authenticated users to dashboard
+    user = get_current_user()
+    if user:
+        return redirect(url_for('main.dashboard'))
+    
     token = request.args.get('token')
     return render_template('auth/signup.html', invite_token=token)
 
 @main_bp.route('/login')
 def login():
     """Login page"""
+    # Redirect authenticated users to dashboard
+    user = get_current_user()
+    if user:
+        return redirect(url_for('main.dashboard'))
+    
     return render_template('auth/login.html')
 
 @main_bp.route('/auth/success')
@@ -92,3 +102,12 @@ def notifications():
     if not user:
         return redirect(url_for('main.login'))
     return render_template('notifications/list.html', user=user)
+
+@main_bp.route('/logout')
+def logout():
+    """Logout page - clears cookies and redirects to login"""
+    from flask import make_response
+    response = make_response(redirect(url_for('main.login')))
+    response.set_cookie('access_token', '', expires=0)
+    response.set_cookie('refresh_token', '', expires=0)
+    return response
