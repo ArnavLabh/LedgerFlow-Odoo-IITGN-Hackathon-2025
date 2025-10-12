@@ -2,6 +2,11 @@
 
 {% block title %}Admin Dashboard - LedgerFlow{% endblock %}
 
+{% block extra_head %}
+<!-- Chart.js for admin charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-container" data-animate="fade-in">
     <div class="dashboard-header">
@@ -40,6 +45,18 @@
         </div>
     </div>
     
+    <!-- Charts Section -->
+    <div class="dashboard-stats" data-animate="slide-up" style="--animate-delay: 180ms; grid-template-columns: 1fr;">
+        <div class="stat-card" style="padding: 1rem;">
+            <h3 style="margin-bottom: .75rem;">Spend by Category (Top 10)</h3>
+            <canvas id="categoryChart" height="160"></canvas>
+        </div>
+        <div class="stat-card" style="padding: 1rem;">
+            <h3 style="margin-bottom: .75rem;">Spend by Month (Last 6)</h3>
+            <canvas id="monthChart" height="160"></canvas>
+        </div>
+    </div>
+
     <div class="table-container" data-animate="slide-up" style="--animate-delay: 200ms;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2 style="margin: 0;">Company Users</h2>
@@ -69,7 +86,7 @@
                 </div>
             </div>
         </div>
-        <table class="data-table" id="usersTable">
+<table class="data-table" id="usersTable">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -81,20 +98,22 @@
             </thead>
             <tbody id="usersBody">
                 <tr>
-                    <td colspan="5" class="text-center">No User Found</td>
+                    <td colspan="5" class="text-center">Loading...</td>
                 </tr>
             </tbody>
         </table>
+        <div class="table-pagination" id="usersPagination" style="display:flex; gap: .5rem; justify-content: flex-end; margin-top: .5rem;">
+            <button class="btn btn-sm" onclick="prevUsersPage()">Prev</button>
+            <span id="usersPageInfo" class="text-muted"></span>
+            <button class="btn btn-sm" onclick="nextUsersPage()">Next</button>
+        </div>
     </div>
     
     <div class="table-container" data-animate="slide-up" style="--animate-delay: 300ms;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2 style="margin: 0;">All Expenses</h2>
-            <a href="/expenses/new" class="btn btn-primary btn-elevated">
-                <i class="fas fa-plus"></i> New Expense
-            </a>
         </div>
-        <table class="data-table" id="expensesTable">
+<table class="data-table" id="expensesTable">
             <thead>
                 <tr>
                     <th>Employee</th>
@@ -107,10 +126,15 @@
             </thead>
             <tbody id="expensesBody">
                 <tr>
-                    <td colspan="6" class="text-center">No Expense Found</td>
+                    <td colspan="6" class="text-center">Loading...</td>
                 </tr>
             </tbody>
         </table>
+        <div class="table-pagination" id="expensesPagination" style="display:flex; gap: .5rem; justify-content: flex-end; margin-top: .5rem;">
+            <button class="btn btn-sm" onclick="prevExpensesPage()">Prev</button>
+            <span id="expensesPageInfo" class="text-muted"></span>
+            <button class="btn btn-sm" onclick="nextExpensesPage()">Next</button>
+        </div>
     </div>
 </div>
 
@@ -161,6 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
 let users = [];
 let expenses = [];
 let allUsers = [];
+let usersPage = 1, usersTotalPages = 1;
+let expensesPage = 1, expensesTotalPages = 1;
 
 function toggleAddUserDropdown() {
     const dropdown = document.getElementById('addUserDropdown');
@@ -249,18 +275,30 @@ async function quickAddUser() {
 }
 
 async function loadUsers() {
+    const tbody = document.getElementById('usersBody');
     try {
-        const response = await fetchWithAuth('/api/admin/users');
-        users = await response.json();
+        const response = await fetchWithAuth(`/api/admin/users?page=${usersPage}&page_size=10`);
+        if (!response.ok) throw new Error('Failed');
+        const data = await response.json();
+        users = data.items || [];
+        usersTotalPages = data.total_pages || 1;
         renderUsers();
-        document.getElementById('totalUsers').textContent = users.length;
+        document.getElementById('totalUsers').textContent = data.total || users.length;
+        document.getElementById('usersPageInfo').textContent = `Page ${data.page} of ${usersTotalPages}`;
     } catch (error) {
         console.error('Error loading users:', error);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Failed to load users</td></tr>';
     }
 }
+function nextUsersPage(){ if (usersPage < usersTotalPages){ usersPage++; loadUsers(); }}
+function prevUsersPage(){ if (usersPage > 1){ usersPage--; loadUsers(); }}
 
 function renderUsers() {
     const tbody = document.getElementById('usersBody');
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found</td></tr>';
+        return;
+    }
     tbody.innerHTML = users.map(user => `
         <tr>
             <td>${user.full_name}</td>
@@ -279,9 +317,13 @@ function renderUsers() {
 }
 
 async function loadExpenses() {
+    const tbody = document.getElementById('expensesBody');
     try {
-        const response = await fetchWithAuth('/api/admin/expenses');
-        expenses = await response.json();
+        const response = await fetchWithAuth(`/api/admin/expenses?page=${expensesPage}&page_size=10`);
+        if (!response.ok) throw new Error('Failed');
+        const data = await response.json();
+        expenses = data.items || [];
+        expensesTotalPages = data.total_pages || 1;
         renderExpenses();
         
         document.getElementById('pendingExpenses').textContent = 
@@ -293,10 +335,14 @@ async function loadExpenses() {
                 e.status === 'Approved' && 
                 new Date(e.updated_at).getMonth() === thisMonth
             ).length;
+        document.getElementById('expensesPageInfo').textContent = `Page ${data.page} of ${expensesTotalPages}`;
     } catch (error) {
         console.error('Error loading expenses:', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load expenses</td></tr>';
     }
 }
+function nextExpensesPage(){ if (expensesPage < expensesTotalPages){ expensesPage++; loadExpenses(); }}
+function prevExpensesPage(){ if (expensesPage > 1){ expensesPage--; loadExpenses(); }}
 
 function renderExpenses() {
     const tbody = document.getElementById('expensesBody');
@@ -361,6 +407,7 @@ document.getElementById('inviteForm').addEventListener('submit', async (e) => {
     }
 });
 
+let categoryChart, monthChart;
 async function loadDashboardStats() {
     try {
         const response = await fetchWithAuth('/api/admin/dashboard/stats');
@@ -371,6 +418,9 @@ async function loadDashboardStats() {
                 stats.expense_counts['ExpenseStatus.PENDING'] || 0;
             document.getElementById('approvedExpenses').textContent = 
                 stats.expense_counts['ExpenseStatus.APPROVED'] || 0;
+            // Charts
+            renderCategoryChart(stats.by_category || {});
+            renderMonthChart(stats.by_month || {});
         }
     } catch (error) {
         console.error('Error loading dashboard stats:', error);
@@ -380,5 +430,35 @@ async function loadDashboardStats() {
 loadUsers();
 loadExpenses();
 loadDashboardStats();
+
+function renderCategoryChart(byCategory){
+    try{
+        const ctx = document.getElementById('categoryChart');
+        if (!ctx) return;
+        const labels = Object.keys(byCategory);
+        const data = Object.values(byCategory);
+        if (categoryChart) { categoryChart.destroy(); }
+        categoryChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Amount', data, backgroundColor: 'rgba(0, 168, 150, 0.5)' }] },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    }catch(e){ /* noop */ }
+}
+
+function renderMonthChart(byMonth){
+    try{
+        const ctx = document.getElementById('monthChart');
+        if (!ctx) return;
+        const labels = Object.keys(byMonth).sort();
+        const data = labels.map(k => byMonth[k]);
+        if (monthChart) { monthChart.destroy(); }
+        monthChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Amount', data, borderColor: 'rgba(0, 168, 150, 0.9)', backgroundColor: 'rgba(0, 168, 150, 0.2)', fill: true }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, tension: 0.3 }
+        });
+    }catch(e){ /* noop */ }
+}
 </script>
 {% endblock %}

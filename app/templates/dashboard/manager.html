@@ -93,7 +93,7 @@ function renderApprovals() {
             <td>${approval.expense.creator.full_name}</td>
             <td>${approval.expense.category}</td>
             <td>${approval.expense.description}</td>
-            <td>₹${parseFloat(approval.expense.amount).toFixed(2)}</td>
+            <td>${approval.expense.amount_display ? '₹' + parseFloat(approval.expense.amount_display).toFixed(2) + ' ('+ (approval.expense.display_currency || '') +')' : '₹' + parseFloat(approval.expense.amount).toFixed(2)}</td>
             <td>${new Date(approval.expense.date_incurred).toLocaleDateString()}</td>
             <td>
                 <a href="/expenses/${approval.expense.id}" class="btn btn-sm btn-primary btn-elevated">

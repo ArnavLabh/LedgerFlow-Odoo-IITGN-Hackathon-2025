@@ -9,15 +9,58 @@ approval_bp = Blueprint('approval', __name__)
 @approval_bp.route('/pending', methods=['GET'])
 @token_required
 def get_pending_approvals(current_user):
-    """Get pending approvals for current user"""
-    approvals = Approval.query.filter_by(
+    """Get pending approvals for current user (paginated if requested). Managers see display amount in company's default currency."""
+    q = Approval.query.filter_by(
         approver_id=current_user.id,
         decision=ApprovalDecision.PENDING
     ).join(Expense).filter(
         Expense.company_id == current_user.company_id
-    ).order_by(Approval.created_at.desc()).all()
-    
-    return jsonify([approval.to_dict(include_expense=True) for approval in approvals])
+    ).order_by(Approval.created_at.desc())
+
+    # Pagination (optional)
+    try:
+        page = int(request.args.get('page')) if request.args.get('page') else None
+        page_size = int(request.args.get('page_size', 10)) if page else None
+    except Exception:
+        page, page_size = None, None
+
+    total = q.count() if page else None
+    records = q.offset((page-1)*page_size).limit(page_size).all() if page else q.all()
+
+    # Optional conversion toggle for managers
+    convert = (request.args.get('convert', 'false').lower() == 'true')
+
+    items = []
+    company_ccy = current_user.company.default_currency if current_user.company else 'INR'
+    for a in records:
+        item = a.to_dict(include_expense=True)
+        # Only convert when explicitly requested by manager
+        try:
+            if current_user.role.value == 'Manager' and convert:
+                from app.services.currency_service import CurrencyService
+                exp = a.expense
+                if str(exp.currency).upper() != company_ccy:
+                    converted = CurrencyService.convert(exp.amount, str(exp.currency), company_ccy)
+                    if converted is not None:
+                        item['expense']['amount_display'] = float(converted)
+                        item['expense']['display_currency'] = company_ccy
+                else:
+                    item['expense']['amount_display'] = float(exp.amount)
+                    item['expense']['display_currency'] = company_ccy
+        except Exception:
+            pass
+        items.append(item)
+
+    if page:
+        return jsonify({
+            'items': items,
+            'page': page,
+            'page_size': page_size,
+            'total': total,
+            'total_pages': (total + page_size - 1) // page_size if total is not None else 1
+        })
+
+    return jsonify(items)
 
 @approval_bp.route('/<approval_id>/decision', methods=['POST'])
 @token_required

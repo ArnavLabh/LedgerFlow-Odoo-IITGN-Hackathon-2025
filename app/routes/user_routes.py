@@ -38,7 +38,7 @@ def get_user_stats(current_user):
     
     # Get approval count (if user can approve)
     approval_count = 0
-    if current_user.role.value in ['Manager', 'Finance', 'Director', 'CFO', 'Admin']:
+    if current_user.role.value in ['Manager', 'Admin']:
         approval_count = Approval.query.filter_by(approver_id=current_user.id).count()
     
     return jsonify({
@@ -53,8 +53,16 @@ def update_profile(current_user):
     data = request.get_json()
     
     # Update allowed fields
-    if 'full_name' in data and data['full_name'].strip():
+    if 'full_name' in data and isinstance(data['full_name'], str) and data['full_name'].strip():
         current_user.full_name = data['full_name'].strip()
+
+    # Preferred currency
+    pref_ccy = data.get('preferred_currency')
+    if pref_ccy:
+        pref_ccy = str(pref_ccy).upper()
+        if len(pref_ccy) != 3:
+            return jsonify({'error': 'preferred_currency must be a 3-letter code'}), 400
+        current_user.preferred_currency = pref_ccy
     
     # Handle password change
     if data.get('current_password') and data.get('new_password'):

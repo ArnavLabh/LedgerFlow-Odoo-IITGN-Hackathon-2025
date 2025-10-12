@@ -69,6 +69,7 @@ class User(db.Model):
     manager_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=True)  # Direct manager
     oauth_provider = db.Column(db.String(50), nullable=True)  # 'google', etc.
     oauth_id = db.Column(db.String(255), nullable=True)
+    preferred_currency = db.Column(db.String(3), nullable=True)  # User preferred currency (defaults to company currency)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -88,9 +89,10 @@ class User(db.Model):
             'role': self.role.value,
             'is_active': self.is_active,
             'company_id': self.company_id,
-            'is_manager_approver': self.is_manager_approver,
+'is_manager_approver': self.is_manager_approver,
             'manager_id': self.manager_id,
             'oauth_provider': self.oauth_provider,
+            'preferred_currency': self.preferred_currency,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }

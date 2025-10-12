@@ -321,25 +321,48 @@ def add_existing_user(current_user):
 @admin_bp.route('/users', methods=['GET'])
 @admin_required
 def get_company_users(current_user):
-    """Get all users in the company for admin dashboard"""
-    users = User.query.filter_by(
-        company_id=current_user.company_id
-    ).order_by(User.created_at.desc()).all()
-    
-    return jsonify([user.to_dict() for user in users])
+    """Get all users in the company for admin dashboard (paginated)"""
+    try:
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))
+    except Exception:
+        page, page_size = 1, 10
+
+    query = User.query.filter_by(company_id=current_user.company_id)
+    total = query.count()
+    users = query.order_by(User.created_at.desc()).offset((page-1)*page_size).limit(page_size).all()
+
+    return jsonify({
+        'items': [user.to_dict() for user in users],
+        'page': page,
+        'page_size': page_size,
+        'total': total,
+        'total_pages': (total + page_size - 1) // page_size
+    })
 
 @admin_bp.route('/expenses', methods=['GET'])
 @admin_required
 def get_company_expenses(current_user):
-    """Get all expenses in the company for admin dashboard"""
+    """Get all expenses in the company for admin dashboard (paginated)"""
     from app.models import Expense
-    
-    # Admin can see all company expenses
-    expenses = Expense.query.filter_by(
-        company_id=current_user.company_id
-    ).order_by(Expense.created_at.desc()).all()
-    
-    return jsonify([expense.to_dict(include_creator=True, include_approvals=True) for expense in expenses])
+
+    try:
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))
+    except Exception:
+        page, page_size = 1, 10
+
+    query = Expense.query.filter_by(company_id=current_user.company_id)
+    total = query.count()
+    expenses = query.order_by(Expense.created_at.desc()).offset((page-1)*page_size).limit(page_size).all()
+
+    return jsonify({
+        'items': [expense.to_dict(include_creator=True, include_approvals=True) for expense in expenses],
+        'page': page,
+        'page_size': page_size,
+        'total': total,
+        'total_pages': (total + page_size - 1) // page_size
+    })
 
 @admin_bp.route('/dashboard/stats', methods=['GET'])
 @admin_required
@@ -347,7 +370,7 @@ def get_admin_dashboard_stats(current_user):
     """Get dashboard statistics for admin"""
     from app.models import Expense, ExpenseStatus
     from sqlalchemy import func
-    
+
     # User counts by role
     user_counts = db.session.query(
         User.role, func.count(User.id)
@@ -369,11 +392,25 @@ def get_admin_dashboard_stats(current_user):
     ).filter_by(
         company_id=current_user.company_id
     ).scalar() or 0
+
+    # By category (top 10)
+    by_category_rows = db.session.query(
+        Expense.category, func.sum(Expense.amount)
+    ).filter_by(company_id=current_user.company_id).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).limit(10).all()
+    by_category = { cat: float(total or 0) for cat, total in by_category_rows }
+
+    # By month (last 6 months)
+    by_month_rows = db.session.query(
+        func.to_char(Expense.date_incurred, 'YYYY-MM'), func.sum(Expense.amount)
+    ).filter_by(company_id=current_user.company_id).group_by(func.to_char(Expense.date_incurred, 'YYYY-MM')).order_by(func.to_char(Expense.date_incurred, 'YYYY-MM').desc()).limit(6).all()
+    by_month = { m: float(total or 0) for m, total in by_month_rows }
     
     return jsonify({
         'user_counts': {str(role): count for role, count in user_counts},
         'expense_counts': {str(status): count for status, count in expense_counts},
         'total_expense_amount': float(total_expenses),
         'total_users': sum(count for _, count in user_counts),
-        'total_expenses': sum(count for _, count in expense_counts)
+        'total_expenses': sum(count for _, count in expense_counts),
+        'by_category': by_category,
+        'by_month': by_month
     })

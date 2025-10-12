@@ -44,6 +44,17 @@
                 <label for="description"><i class="fas fa-align-left"></i> Description *</label>
                 <textarea id="description" class="form-textarea" placeholder="Provide details about this expense" required></textarea>
             </div>
+
+            <div class="form-group" style="border: 1px dashed var(--border-subtle); padding: 1rem; border-radius: var(--radius-sm);">
+                <label><i class="fas fa-receipt"></i> Scan Receipt (OCR)</label>
+                <div style="display:flex; gap: .5rem; align-items: center;">
+                    <input type="file" id="receiptFile" accept="image/*" class="form-input">
+                    <button type="button" class="btn btn-secondary" onclick="scanReceipt()">
+                        <i class="fas fa-magic"></i> Auto-fill from Receipt
+                    </button>
+                </div>
+                <small class="form-hint">We will try to extract amount, date, merchant and description from the image.</small>
+            </div>
             
             <div class="form-group">
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -207,5 +218,36 @@ document.getElementById('expenseForm').addEventListener('submit', async (e) => {
     isDraft = false;
     await submitExpense();
 });
+
+async function scanReceipt(){
+    const input = document.getElementById('receiptFile');
+    if (!input.files || input.files.length === 0){
+        showToast('Please choose an image file', 'error');
+        return;
+    }
+    const file = input.files[0];
+    const form = new FormData();
+    form.append('receipt', file);
+    try{
+        const resp = await fetch('/api/expenses/ocr', { method: 'POST', body: form, credentials: 'include' });
+        const result = await resp.json();
+        if (!resp.ok){
+            showToast(result.error || 'OCR failed', 'error');
+            return;
+        }
+        const s = result.suggestion || {};
+        if (s.amount) document.getElementById('amount').value = s.amount;
+        if (s.date_incurred){
+            // Normalize to yyyy-mm-dd if needed
+            const m = s.date_incurred.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);
+            document.getElementById('dateIncurred').value = m ? `${m[3]}-${m[2]}-${m[1]}` : s.date_incurred;
+        }
+        if (s.description) document.getElementById('description').value = s.description;
+        showToast('Receipt scanned. Please review and submit.', 'success');
+    }catch(err){
+        showToast('OCR failed', 'error');
+        console.error(err);
+    }
+}
 </script>
 {% endblock %}

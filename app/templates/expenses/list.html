@@ -12,15 +12,23 @@
     </div>
     
     <div class="table-container" data-animate="slide-up" style="--animate-delay: 100ms;">
-        <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
-            <label for="statusFilter" style="font-weight: 500; color: var(--text-secondary);">Filter:</label>
-            <select id="statusFilter" class="form-select" style="max-width: 200px;" onchange="filterExpenses()">
-                <option value="">All Statuses</option>
-                <option value="draft">Draft</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-            </select>
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div style="display:flex; gap:.5rem; align-items:center;">
+                <label for="statusFilter" style="font-weight: 500; color: var(--text-secondary);">Filter:</label>
+                <select id="statusFilter" class="form-select" style="max-width: 200px;" onchange="filterExpenses()">
+                    <option value="">All Statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            {% if user.role.value == 'Manager' %}
+            <label style="display:flex; gap:.5rem; align-items:center; cursor:pointer;">
+                <input type="checkbox" id="convertToggle" onchange="reloadExpenses()">
+                <span>Show amounts in company currency ({{ user.company.default_currency if user.company else 'INR' }})</span>
+            </label>
+            {% endif %}
         </div>
         
         <table class="data-table" id="expensesTable">
@@ -40,6 +48,14 @@
                 </tr>
             </tbody>
         </table>
+        <div class="table-pagination" id="expensesPagination" style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:.5rem;">
+            <button class="btn btn-sm" onclick="prevExpensesPage()">Prev</button>
+            <span id="expensesPageInfo" class="text-muted"></span>
+            <button class="btn btn-sm" onclick="nextExpensesPage()">Next</button>
+        </div>
+        <div id="conversionNote" class="text-muted" style="margin-top:.5rem; display:none; font-size:.875rem;">
+            Showing amounts in company currency. Hover amount to see original currency.
+        </div>
     </div>
 </div>
 
@@ -58,28 +74,48 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let allExpenses = [];
+let expensesPage = 1, expensesTotalPages = 1;
+
+function buildExpensesUrl(){
+    let url = '/api/expenses';
+    const params = [];
+    const status = document.getElementById('statusFilter').value;
+    if (status) params.push(`status=${encodeURIComponent(status)}`);
+    const toggle = document.getElementById('convertToggle');
+    if (toggle && toggle.checked) params.push('convert=true');
+    params.push(`page=${expensesPage}`);
+    params.push('page_size=10');
+    if (params.length) url += `?${params.join('&')}`;
+    return url;
+}
 
 async function loadExpenses() {
+    const tbody = document.getElementById('expensesBody');
     try {
-        const response = await fetch('/api/expenses', {
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            if (response.status === 401) {
-                window.location.href = '/login';
-                return;
-            }
-            throw new Error('Failed to load expenses');
-        }
-        
-        allExpenses = await response.json();
+        const response = await fetchWithAuth(buildExpensesUrl());
+        if (!response.ok) throw new Error('Failed');
+        const data = await response.json();
+        allExpenses = Array.isArray(data) ? data : (data.items || []);
+        expensesTotalPages = Array.isArray(data) ? 1 : (data.total_pages || 1);
+        document.getElementById('expensesPageInfo').textContent = Array.isArray(data) ? 'Page 1 of 1' : `Page ${data.page} of ${expensesTotalPages}`;
         renderExpenses(allExpenses);
+        const note = document.getElementById('conversionNote');
+        const toggle = document.getElementById('convertToggle');
+        if (note && toggle) note.style.display = toggle.checked ? 'block' : 'none';
     } catch (error) {
         console.error('Error loading expenses:', error);
         showToast('Failed to load expenses', 'error');
+        tbody.innerHTML = '<tr><td colspan=\"6\" class=\"text-center\">Failed to load expenses</td></tr>';
     }
 }
+
+function reloadExpenses(){
+    expensesPage = 1;
+    loadExpenses();
+}
+
+function nextExpensesPage(){ if (expensesPage < expensesTotalPages){ expensesPage++; loadExpenses(); } }
+function prevExpensesPage(){ if (expensesPage > 1){ expensesPage--; loadExpenses(); } }
 
 function filterExpenses() {
     const status = document.getElementById('statusFilter').value;
@@ -104,7 +140,9 @@ function renderExpenses(expenses) {
             <td>${formatDate(expense.date_incurred)}</td>
             <td>${expense.category}</td>
             <td>${expense.description}</td>
-            <td>₹${parseFloat(expense.amount).toFixed(2)}</td>
+            <td title="${'Original: ₹' + parseFloat(expense.amount).toFixed(2) + (expense.currency ? ' (' + expense.currency + ')' : '')}">
+                ${expense.amount_display && expense.display_currency ? '₹' + parseFloat(expense.amount_display).toFixed(2) + ' (' + expense.display_currency + ')' : '₹' + parseFloat(expense.amount).toFixed(2) + (expense.currency ? ' (' + expense.currency + ')' : '')}
+            </td>
             <td><span class="status-badge status-${expense.status.toLowerCase()}">${expense.status}</span></td>
             <td>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -112,8 +150,8 @@ function renderExpenses(expenses) {
                         <i class="fas fa-eye"></i> View
                     </a>
                     ${expense.status === 'Draft' ? `
-                        <button onclick="deleteExpense('${expense.id}')" class="btn btn-sm btn-danger">
-                            <i class="fas fa-trash"></i>
+                        <button onclick=\"deleteExpense('${expense.id}')\" class=\"btn btn-sm btn-danger\">
+                            <i class=\"fas fa-trash\"></i>
                         </button>
                     ` : ''}
                 </div>

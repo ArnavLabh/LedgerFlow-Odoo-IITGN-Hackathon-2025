@@ -35,10 +35,10 @@
                 <nav class="nav">
                     <a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
                     <a href="/expenses" class="nav-link"><i class="fas fa-list"></i> Expenses</a>
-                    {% if user.role in ['Manager', 'Finance', 'Director', 'CFO', 'Admin'] %}
+                    {% if user.role.value in ['Manager', 'Admin'] %}
                     <a href="/approvals" class="nav-link"><i class="fas fa-check-circle"></i> Approvals</a>
                     {% endif %}
-                    {% if user.role == 'Admin' %}
+                    {% if user.role.value == 'Admin' %}
                     <a href="/admin/users" class="nav-link"><i class="fas fa-users"></i> Users</a>
                     <a href="/admin/config" class="nav-link"><i class="fas fa-cog"></i> Config</a>
                     {% endif %}
@@ -87,7 +87,7 @@
                     <div class="user-dropdown" id="userDropdown" style="display: none;">
                         <div class="user-info">
                             <p class="user-name">{{ user.full_name }}</p>
-                            <p class="user-role">{{ user.role }}</p>
+                            <p class="user-role">{{ user.role.value }}</p>
                             <p class="user-company">{{ user.company.name if user.company else 'No Company' }}</p>
                         </div>
                         <a href="/profile" class="profile-btn">

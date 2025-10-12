@@ -25,6 +25,7 @@ def create_app(config_class=Config):
     from app.routes.notification_routes import notification_bp
     from app.routes.admin_routes import admin_bp
     from app.routes.main_routes import main_bp
+    from app.routes.utils_routes import utils_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -33,6 +34,7 @@ def create_app(config_class=Config):
     app.register_blueprint(approval_bp, url_prefix='/api/approvals')
     app.register_blueprint(notification_bp, url_prefix='/api/notifications')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(utils_bp, url_prefix='/api/utils')
     app.register_blueprint(main_bp)  # For rendered pages
     
     return app

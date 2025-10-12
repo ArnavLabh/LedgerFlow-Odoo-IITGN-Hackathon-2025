@@ -98,8 +98,11 @@ async function loadExpenseDetail() {
         const response = await fetchWithAuth(`/api/expenses/${expenseId}`);
         
         if (!response.ok) {
-            const error = await response.json();
+            const error = await response.json().catch(() => ({}));
             showToast(error.error || 'Failed to load expense', 'error');
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('expenseContent').innerHTML = '<div class="text-center">Unable to load expense.</div>';
+            document.getElementById('expenseContent').style.display = 'block';
             return;
         }
         
@@ -128,11 +131,19 @@ async function loadExpenseDetail() {
     } catch (error) {
         console.error('Error loading expense:', error);
         showToast('Failed to load expense', 'error');
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('expenseContent').innerHTML = '<div class="text-center">Unable to load expense.</div>';
+        document.getElementById('expenseContent').style.display = 'block';
     }
 }
 
 function renderExpense() {
-    document.getElementById('expenseAmount').textContent = formatCurrency(expense.amount);
+    // Show converted amount for managers if available
+    if (expense.amount_display && expense.display_currency) {
+        document.getElementById('expenseAmount').textContent = `${formatCurrency(expense.amount_display)} (${expense.display_currency})`;
+    } else {
+        document.getElementById('expenseAmount').textContent = formatCurrency(expense.amount);
+    }
     document.getElementById('expenseStatus').innerHTML = 
         `<span class="status-badge status-${expense.status.toLowerCase()}">${expense.status}</span>`;
     document.getElementById('expenseCategory').textContent = expense.category;
