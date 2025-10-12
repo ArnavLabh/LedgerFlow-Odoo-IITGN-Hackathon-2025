@@ -135,4 +135,4 @@ def admin_required(f):
 
 def manager_or_admin_required(f):
     """Decorator to require Manager or Admin role"""
-    return role_required(UserRole.ADMIN, UserRole.MANAGER, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.CFO)(f)
+    return role_required(UserRole.ADMIN, UserRole.MANAGER)(f)

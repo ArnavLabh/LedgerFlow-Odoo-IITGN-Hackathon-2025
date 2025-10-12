@@ -7,9 +7,6 @@ import enum
 class UserRole(enum.Enum):
     ADMIN = "Admin"
     MANAGER = "Manager"
-    FINANCE = "Finance"
-    DIRECTOR = "Director"
-    CFO = "CFO"
     EMPLOYEE = "Employee"
 
 class ExpenseStatus(enum.Enum):

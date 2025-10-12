@@ -50,7 +50,7 @@ def dashboard():
     
     if user.role.value == 'Admin':
         return render_template('dashboard/admin.html', user=user)
-    elif user.role.value in ['Manager', 'Finance', 'Director', 'CFO']:
+    elif user.role.value == 'Manager':
         return render_template('dashboard/manager.html', user=user)
     else:
         return render_template('dashboard/employee.html', user=user)

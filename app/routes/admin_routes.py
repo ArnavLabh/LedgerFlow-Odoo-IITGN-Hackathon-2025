@@ -317,3 +317,63 @@ def add_existing_user(current_user):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users', methods=['GET'])
+@admin_required
+def get_company_users(current_user):
+    """Get all users in the company for admin dashboard"""
+    users = User.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(User.created_at.desc()).all()
+    
+    return jsonify([user.to_dict() for user in users])
+
+@admin_bp.route('/expenses', methods=['GET'])
+@admin_required
+def get_company_expenses(current_user):
+    """Get all expenses in the company for admin dashboard"""
+    from app.models import Expense
+    
+    # Admin can see all company expenses
+    expenses = Expense.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(Expense.created_at.desc()).all()
+    
+    return jsonify([expense.to_dict(include_creator=True, include_approvals=True) for expense in expenses])
+
+@admin_bp.route('/dashboard/stats', methods=['GET'])
+@admin_required
+def get_admin_dashboard_stats(current_user):
+    """Get dashboard statistics for admin"""
+    from app.models import Expense, ExpenseStatus
+    from sqlalchemy import func
+    
+    # User counts by role
+    user_counts = db.session.query(
+        User.role, func.count(User.id)
+    ).filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).group_by(User.role).all()
+    
+    # Expense counts by status
+    expense_counts = db.session.query(
+        Expense.status, func.count(Expense.id)
+    ).filter_by(
+        company_id=current_user.company_id
+    ).group_by(Expense.status).all()
+    
+    # Total expense amount
+    total_expenses = db.session.query(
+        func.sum(Expense.amount)
+    ).filter_by(
+        company_id=current_user.company_id
+    ).scalar() or 0
+    
+    return jsonify({
+        'user_counts': {str(role): count for role, count in user_counts},
+        'expense_counts': {str(status): count for status, count in expense_counts},
+        'total_expense_amount': float(total_expenses),
+        'total_users': sum(count for _, count in user_counts),
+        'total_expenses': sum(count for _, count in expense_counts)
+    })

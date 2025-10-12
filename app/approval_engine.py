@@ -18,11 +18,25 @@ class ApprovalEngine:
             ).order_by(ApproverAssignment.sequence).all()
             
             if not assignments:
-                # No approval workflow configured, auto-approve
-                expense.status = ExpenseStatus.APPROVED
-                db.session.commit()
-                ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
-                return
+                # No approval workflow configured, require explicit approval rules to auto-approve
+                # Check if there are any auto-approval rules
+                auto_approval_rules = ApprovalRule.query.filter_by(
+                    company_id=expense.company_id,
+                    enabled=True
+                ).all()
+                
+                if auto_approval_rules and ApprovalEngine._check_auto_approval_rules(expense):
+                    expense.status = ExpenseStatus.APPROVED
+                    db.session.commit()
+                    ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
+                    return
+                else:
+                    # No workflow and no auto-approval rules, require manual admin approval
+                    expense.status = ExpenseStatus.PENDING
+                    expense.current_approval_step = 1
+                    db.session.commit()
+                    ApprovalEngine._notify_manual_approval_required(expense)
+                    return
             
             # Create approval records for each step
             approvals_created = 0
@@ -55,11 +69,24 @@ class ApprovalEngine:
                     approvals_created += 1
             
             if approvals_created == 0:
-                # No valid approvers found, auto-approve
-                expense.status = ExpenseStatus.APPROVED
-                db.session.commit()
-                ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
-                return
+                # No valid approvers found, check for auto-approval rules
+                auto_approval_rules = ApprovalRule.query.filter_by(
+                    company_id=expense.company_id,
+                    enabled=True
+                ).all()
+                
+                if auto_approval_rules and ApprovalEngine._check_auto_approval_rules(expense):
+                    expense.status = ExpenseStatus.APPROVED
+                    db.session.commit()
+                    ApprovalEngine._notify_approval_decision(expense, None, ApprovalDecision.APPROVED, auto=True)
+                    return
+                else:
+                    # Require manual approval from company admin
+                    expense.status = ExpenseStatus.PENDING
+                    expense.current_approval_step = 1
+                    db.session.commit()
+                    ApprovalEngine._notify_manual_approval_required(expense)
+                    return
             
             # Update expense status
             expense.status = ExpenseStatus.PENDING
@@ -211,5 +238,35 @@ class ApprovalEngine:
                     link=f'/expenses/{expense.id}'
                 )
                 db.session.add(admin_notification)
+        
+        db.session.commit()
+    
+    @staticmethod
+    def _check_auto_approval_rules(expense):
+        """Check if expense qualifies for auto-approval based on rules"""
+        # This is a simplified check - you can expand this based on specific business rules
+        # For now, we don't auto-approve unless explicitly configured
+        return False
+    
+    @staticmethod
+    def _notify_manual_approval_required(expense):
+        """Notify admins that manual approval is required"""
+        from app.models import UserRole
+        
+        # Notify all company admins about the expense requiring manual approval
+        admins = User.query.filter_by(
+            company_id=expense.company_id,
+            role=UserRole.ADMIN,
+            is_active=True
+        ).all()
+        
+        for admin in admins:
+            notification = Notification(
+                user_id=admin.id,
+                title='Manual Expense Approval Required',
+                message=f'{expense.creator.full_name} submitted an expense of ₹{expense.amount} requiring manual approval',
+                link=f'/expenses/{expense.id}'
+            )
+            db.session.add(notification)
         
         db.session.commit()

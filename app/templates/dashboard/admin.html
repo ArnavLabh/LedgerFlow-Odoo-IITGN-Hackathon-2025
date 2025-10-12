@@ -56,9 +56,6 @@
                         <select id="quickAddUserRole" class="form-select" style="width: 100%; margin-bottom: 0.75rem;">
                             <option value="Employee">Employee</option>
                             <option value="Manager">Manager</option>
-                            <option value="Finance">Finance</option>
-                            <option value="Director">Director</option>
-                            <option value="CFO">CFO</option>
                         </select>
                         <button onclick="quickAddUser()" class="btn btn-primary btn-sm" style="width: 100%;">
                             <i class="fas fa-plus"></i> Add Selected User
@@ -132,9 +129,6 @@
                     <option value="">Select role</option>
                     <option value="EMPLOYEE">Employee</option>
                     <option value="MANAGER">Manager</option>
-                    <option value="FINANCE">Finance</option>
-                    <option value="DIRECTOR">Director</option>
-                    <option value="CFO">CFO</option>
                     <option value="ADMIN">Admin</option>
                 </select>
             </div>
@@ -256,7 +250,7 @@ async function quickAddUser() {
 
 async function loadUsers() {
     try {
-        const response = await fetchWithAuth('/api/company/users');
+        const response = await fetchWithAuth('/api/admin/users');
         users = await response.json();
         renderUsers();
         document.getElementById('totalUsers').textContent = users.length;
@@ -286,7 +280,7 @@ function renderUsers() {
 
 async function loadExpenses() {
     try {
-        const response = await fetchWithAuth('/api/expenses');
+        const response = await fetchWithAuth('/api/admin/expenses');
         expenses = await response.json();
         renderExpenses();
         
@@ -367,7 +361,24 @@ document.getElementById('inviteForm').addEventListener('submit', async (e) => {
     }
 });
 
+async function loadDashboardStats() {
+    try {
+        const response = await fetchWithAuth('/api/admin/dashboard/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            document.getElementById('totalUsers').textContent = stats.total_users;
+            document.getElementById('pendingExpenses').textContent = 
+                stats.expense_counts['ExpenseStatus.PENDING'] || 0;
+            document.getElementById('approvedExpenses').textContent = 
+                stats.expense_counts['ExpenseStatus.APPROVED'] || 0;
+        }
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+    }
+}
+
 loadUsers();
 loadExpenses();
+loadDashboardStats();
 </script>
 {% endblock %}

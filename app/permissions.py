@@ -18,7 +18,7 @@ def admin_required(f):
     return decorated
 
 def manager_or_admin_required(f):
-    """Decorator to require Manager-level or Admin role"""
+    """Decorator to require Manager or Admin role"""
     @wraps(f)
     def decorated(*args, **kwargs):
         user = get_current_user()
@@ -26,13 +26,13 @@ def manager_or_admin_required(f):
             return jsonify({'error': 'Authentication required'}), 401
         if not user.is_active:
             return jsonify({'error': 'Account inactive'}), 403
-        if user.role not in [UserRole.ADMIN, UserRole.MANAGER, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.CFO]:
-            return jsonify({'error': 'Manager access required'}), 403
+        if user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+            return jsonify({'error': 'Manager or Admin access required'}), 403
         return f(user, *args, **kwargs)
     return decorated
 
 def can_approve_expenses(f):
-    """Decorator for users who can approve expenses"""
+    """Decorator for users who can approve expenses (Manager and Admin only)"""
     @wraps(f)
     def decorated(*args, **kwargs):
         user = get_current_user()
@@ -40,8 +40,8 @@ def can_approve_expenses(f):
             return jsonify({'error': 'Authentication required'}), 401
         if not user.is_active:
             return jsonify({'error': 'Account inactive'}), 403
-        if user.role not in [UserRole.ADMIN, UserRole.MANAGER, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.CFO]:
-            return jsonify({'error': 'Approval permission required'}), 403
+        if user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+            return jsonify({'error': 'Manager or Admin approval permission required'}), 403
         return f(user, *args, **kwargs)
     return decorated
 
@@ -50,8 +50,8 @@ def can_view_all_expenses(user):
     return user.role == UserRole.ADMIN
 
 def can_view_team_expenses(user):
-    """Check if user can view team expenses"""
-    return user.role in [UserRole.ADMIN, UserRole.MANAGER, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.CFO]
+    """Check if user can view team expenses (Manager and Admin only)"""
+    return user.role in [UserRole.ADMIN, UserRole.MANAGER]
 
 def can_manage_users(user):
     """Check if user can manage other users"""

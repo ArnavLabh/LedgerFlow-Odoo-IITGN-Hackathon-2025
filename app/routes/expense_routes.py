@@ -53,7 +53,7 @@ def list_expenses(current_user):
         subordinate_ids = [sub.id for sub in current_user.subordinates]
         subordinate_ids.append(current_user.id)
         query = query.filter(Expense.created_by.in_(subordinate_ids))
-    # Admin, Finance, Director, CFO see all company expenses
+    # Admin sees all company expenses
     
     # Filter by status
     status = request.args.get('status')
