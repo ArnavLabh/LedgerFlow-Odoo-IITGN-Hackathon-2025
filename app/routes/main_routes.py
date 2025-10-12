@@ -111,6 +111,23 @@ def profile():
         return redirect(url_for('main.login'))
     return render_template('profile.html', user=user)
 
+# Static pages
+@main_bp.route('/about')
+def about():
+    return render_template('pages/about.html')
+
+@main_bp.route('/privacy')
+def privacy():
+    return render_template('pages/privacy.html')
+
+@main_bp.route('/terms')
+def terms():
+    return render_template('pages/terms.html')
+
+@main_bp.route('/contact')
+def contact():
+    return render_template('pages/contact.html')
+
 @main_bp.route('/notifications')
 def notifications():
     """Notifications page"""

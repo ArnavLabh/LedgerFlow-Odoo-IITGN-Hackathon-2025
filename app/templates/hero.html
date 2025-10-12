@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LedgerFlow - Modern Expense Management</title>
+<title>LedgerFlow – Premium Expense Management</title>
     
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,8 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     
-    <style>
+<style>
+        html, body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
         .hero {
             min-height: 100vh;
             display: flex;
@@ -24,7 +25,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            background: radial-gradient(ellipse at top, rgba(68, 161, 160, 0.15) 0%, transparent 60%),
+background: radial-gradient(ellipse at top, rgba(68, 161, 160, 0.20) 0%, transparent 60%),
                         linear-gradient(135deg, var(--bg-surface), rgba(14, 28, 33, 0.95));
             overflow: hidden;
             padding: 2rem;
@@ -83,7 +84,7 @@
         
         .hero-subtitle {
             font-size: clamp(0.5rem, 3vw, 2rem);
-            color: var(--text-secondary);
+color: var(--text-primary);
             margin-bottom: 3rem;
             max-width: 600px;
             margin-left: auto;
@@ -97,7 +98,7 @@
             gap: 1.5rem;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 4rem;
+margin-bottom: 2.5rem;
         }
         
         .hero-btn {
@@ -112,7 +113,7 @@
             transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(20px);
+backdrop-filter: blur(28px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
@@ -158,7 +159,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
-            margin-top: 4rem;
+margin-top: 2rem;
         }
         
         .feature-card {
@@ -365,16 +366,14 @@
             <!-- Action buttons -->
             <div class="hero-buttons">
                 <a href="/signup" class="hero-btn hero-btn-primary">
-                    <i class="fas fa-rocket"></i>
-                    <span data-i18n="get_started">Get Started Free</span>
+<span data-i18n="get_started">Get Started</span>
                 </a>
                 <a href="/login" class="hero-btn hero-btn-secondary">
-                    <i class="fas fa-sign-in-alt"></i>
                     <span data-i18n="login">Sign In</span>
                 </a>
             </div>
             
-            <!-- Feature highlights -->
+            <!-- Key Features -->
             <div class="hero-features">
                 <div class="feature-card">
                     <i class="fas fa-bolt feature-icon"></i>
@@ -402,8 +401,50 @@
             </div>
         </div>
     </div>
+
+    <!-- FAQ Section -->
+    <section style="max-width: 960px; margin: 2rem auto 0 auto; padding: 0 1rem;">
+      <h2 style="text-align:center; color: var(--text-primary); margin-bottom: 1rem;">Frequently Asked Questions</h2>
+      <div class="faq">
+        <details class="faq-item">
+          <summary>How does LedgerFlow streamline approvals?</summary>
+          <div class="faq-answer">Configure multi-step rules, manager escalations, and percentage/specific approver logic. Approvers get real-time notifications.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Can managers view amounts in a single currency?</summary>
+          <div class="faq-answer">Yes. Managers can toggle a company-currency view for consistent review regardless of the original expense currency.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Do you support OCR for receipts?</summary>
+          <div class="faq-answer">Yes. Employees can scan receipts and auto-fill key fields like amount, date, and description.</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="margin-top: 3rem; padding: 1.5rem 1rem; border-top: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); backdrop-filter: blur(18px);">
+      <div style="max-width: 1200px; margin: 0 auto; display:flex; gap: 1rem; justify-content: space-between; align-items:center; flex-wrap: wrap;">
+        <div style="color: var(--text-secondary);">© 2025 LedgerFlow, Inc. All rights reserved.</div>
+        <nav style="display:flex; gap: 1rem;">
+          <a href="/about" class="nav-link">About</a>
+          <a href="/contact" class="nav-link">Contact</a>
+          <a href="/privacy" class="nav-link">Privacy</a>
+          <a href="/terms" class="nav-link">Terms</a>
+        </nav>
+      </div>
+    </footer>
     
     <script>
+        // Animate dropdowns (FAQ)
+        document.querySelectorAll('.faq-item').forEach(d => {
+          d.addEventListener('toggle', () => {
+            if (d.open) {
+              d.classList.add('open');
+            } else {
+              d.classList.remove('open');
+            }
+          });
+        });
         // Language translations for hero only
         const translations = {
           en: { subtitle: 'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics', get_started: 'Get Started Free', login: 'Sign In' },
