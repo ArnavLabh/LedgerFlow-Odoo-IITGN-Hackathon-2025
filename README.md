@@ -4,6 +4,8 @@ LedgerFlow enables organizations to control and accelerate employee reimbursemen
 
 A production-ready Flask-based expense management application with multi-tenant support, complex approval workflows, and Google OAuth integration.
 
+[Click to watch demo video for Round 1](https://drive.google.com/file/d/1PRtzb-CrtB0gyIRqYPfbAf1P7akmoAEv/view?usp=sharing)
+
 ## 🚀 Features
 
 - **Multi-tenant Architecture**: Support for multiple companies with isolated data
@@ -91,7 +93,7 @@ A production-ready Flask-based expense management application with multi-tenant 
 
 ## 🏗️ Database Schema
 
-
+<img width="1806" height="1282" alt="Database Schema" src="https://github.com/user-attachments/assets/e86c30ef-6e3d-4a3e-9eb8-307db038ed40" />
 
 ### Tables
 
