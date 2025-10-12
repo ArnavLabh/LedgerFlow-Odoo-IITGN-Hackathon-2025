@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -370,7 +370,7 @@
         .expensio-content-right {
             flex: 1;
             display: flex;
-            justify-content: flex-end;
+            justify-content: center ;
             align-items: center;
         }
 
@@ -1124,6 +1124,11 @@
                 text-align: center;
             }
         }
+        @media (min-width: 1024px) {
+    .lg\:justify-end {
+        justify-content: center;
+    }
+}
     </style>
 
     <div class="expensio-container">
@@ -1514,11 +1519,9 @@
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             setTheme(savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            // Check system preference if no stored value
-            setTheme('dark');
         } else {
-            setTheme('light');
+            // Default to dark theme
+            setTheme('dark');
         }
 
 
