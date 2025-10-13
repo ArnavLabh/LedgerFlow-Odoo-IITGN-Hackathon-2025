@@ -39,3 +39,159 @@ msgstr "Revolutionize Financial Control with LedgerFlow"
 
 msgid "Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control."
 msgstr "Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control."
+
+msgid "LedgerFlow - AI-Powered Financial Intelligence"
+msgstr "LedgerFlow - AI-Powered Financial Intelligence"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Toggle Theme"
+msgstr "Toggle Theme"
+
+msgid "Get Started Free"
+msgstr "Get Started Free"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Total Balance"
+msgstr "Total Balance"
+
+msgid "↗ +12.5% from last month"
+msgstr "↗ +12.5% from last month"
+
+msgid "Expenses"
+msgstr "Expenses"
+
+msgid "Savings"
+msgstr "Savings"
+
+msgid "Active Users"
+msgstr "Active Users"
+
+msgid "Processed"
+msgstr "Processed"
+
+msgid "Uptime"
+msgstr "Uptime"
+
+msgid "Core Features"
+msgstr "Core Features"
+
+msgid "Everything you need for"
+msgstr "Everything you need for"
+
+msgid "financial success"
+msgstr "financial success"
+
+msgid "LedgerFlow combines powerful AI technology with intuitive design to deliver comprehensive financial management solutions."
+msgstr "LedgerFlow combines powerful AI technology with intuitive design to deliver comprehensive financial management solutions."
+
+msgid "AI-Powered Automation"
+msgstr "AI-Powered Automation"
+
+msgid "Intelligent expense categorization and automated approval workflows that learn from your patterns."
+msgstr "Intelligent expense categorization and automated approval workflows that learn from your patterns."
+
+msgid "Real-time Analytics"
+msgstr "Real-time Analytics"
+
+msgid "Comprehensive dashboards with predictive insights and customizable reporting tools."
+msgstr "Comprehensive dashboards with predictive insights and customizable reporting tools."
+
+msgid "Enterprise Security"
+msgstr "Enterprise Security"
+
+msgid "Bank-level encryption with multi-factor authentication and compliance with global standards."
+msgstr "Bank-level encryption with multi-factor authentication and compliance with global standards."
+
+msgid "Smart Integrations"
+msgstr "Smart Integrations"
+
+msgid "Seamlessly connect with 200+ business tools and accounting software platforms."
+msgstr "Seamlessly connect with 200+ business tools and accounting software platforms."
+
+msgid "Multi-Currency Support"
+msgstr "Multi-Currency Support"
+
+msgid "Handle global transactions with automatic currency conversion and compliance tracking."
+msgstr "Handle global transactions with automatic currency conversion and compliance tracking."
+
+msgid "Mobile Excellence"
+msgstr "Mobile Excellence"
+
+msgid "Full-featured mobile apps with offline capability and instant receipt scanning via OCR."
+msgstr "Full-featured mobile apps with offline capability and instant receipt scanning via OCR."
+
+msgid "Frequently Asked Questions"
+msgstr "Frequently Asked Questions"
+
+msgid "Everything you need to know"
+msgstr "Everything you need to know"
+
+msgid "Get answers to common questions about LedgerFlow's features and capabilities."
+msgstr "Get answers to common questions about LedgerFlow's features and capabilities."
+
+msgid "How does LedgerFlow use AI for expense management?"
+msgstr "How does LedgerFlow use AI for expense management?"
+
+msgid "LedgerFlow uses advanced machine learning algorithms to automatically categorize expenses, detect anomalies, predict spending patterns, and optimize approval workflows. Our AI learns from your organization's behavior to provide increasingly accurate insights over time."
+msgstr "LedgerFlow uses advanced machine learning algorithms to automatically categorize expenses, detect anomalies, predict spending patterns, and optimize approval workflows. Our AI learns from your organization's behavior to provide increasingly accurate insights over time."
+
+msgid "Is my financial data secure with LedgerFlow?"
+msgstr "Is my financial data secure with LedgerFlow?"
+
+msgid "Absolutely. We use bank-level encryption (AES-256), multi-factor authentication, and comply with SOC 2, GDPR, and PCI DSS standards. Your data is stored in secure, geographically distributed data centers with 24/7 monitoring."
+msgstr "Absolutely. We use bank-level encryption (AES-256), multi-factor authentication, and comply with SOC 2, GDPR, and PCI DSS standards. Your data is stored in secure, geographically distributed data centers with 24/7 monitoring."
+
+msgid "Can LedgerFlow integrate with my existing accounting software?"
+msgstr "Can LedgerFlow integrate with my existing accounting software?"
+
+msgid "Yes! LedgerFlow seamlessly integrates with over 200 business applications including QuickBooks, Xero, SAP, Oracle, Salesforce, and more. Our open API also allows for custom integrations tailored to your specific needs."
+msgstr "Yes! LedgerFlow seamlessly integrates with over 200 business applications including QuickBooks, Xero, SAP, Oracle, Salesforce, and more. Our open API also allows for custom integrations tailored to your specific needs."
+
+msgid "What support and training do you provide?"
+msgstr "What support and training do you provide?"
+
+msgid "We provide comprehensive onboarding, dedicated customer success managers, live chat support, extensive documentation, video tutorials, and regular training webinars. Enterprise customers receive priority support with guaranteed response times."
+msgstr "We provide comprehensive onboarding, dedicated customer success managers, live chat support, extensive documentation, video tutorials, and regular training webinars. Enterprise customers receive priority support with guaranteed response times."
+
+msgid "Revolutionizing financial management with AI-powered intelligence and enterprise-grade security."
+msgstr "Revolutionizing financial management with AI-powered intelligence and enterprise-grade security."
+
+msgid "Product"
+msgstr "Product"
+
+msgid "Features"
+msgstr "Features"
+
+msgid "Pricing"
+msgstr "Pricing"
+
+msgid "Integrations"
+msgstr "Integrations"
+
+msgid "API"
+msgstr "API"
+
+msgid "Company"
+msgstr "Company"
+
+msgid "About"
+msgstr "About"
+
+msgid "Careers"
+msgstr "Careers"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Privacy Policy"
+msgstr "Privacy Policy"
+
+msgid "All rights reserved."
+msgstr "All rights reserved."
+
+msgid "Built with ❤️ for modern businesses"
+msgstr "Built with ❤️ for modern businesses"

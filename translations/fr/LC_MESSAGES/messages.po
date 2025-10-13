@@ -39,3 +39,156 @@ msgstr "Révolutionnez le Contrôle Financier avec LedgerFlow"
 
 msgid "Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control."
 msgstr "Découvrez l'avenir de la gestion des dépenses. LedgerFlow combine l'automatisation pilotée par l'IA avec une sécurité de niveau entreprise pour offrir une visibilité et un contrôle financiers sans précédent."
+
+msgid "LedgerFlow - AI-Powered Financial Intelligence"
+msgstr "LedgerFlow - Intelligence Financière Alimentée par l'IA"
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "Toggle Theme"
+msgstr "Changer de Thème"
+
+msgid "Get Started Free"
+msgstr "Commencer Gratuitement"
+
+msgid "Dashboard"
+msgstr "Tableau de Bord"
+
+msgid "Total Balance"
+msgstr "Solde Total"
+
+msgid "Expenses"
+msgstr "Dépenses"
+
+msgid "Savings"
+msgstr "Économies"
+
+msgid "Active Users"
+msgstr "Utilisateurs Actifs"
+
+msgid "Processed"
+msgstr "Traité"
+
+msgid "Uptime"
+msgstr "Disponibilité"
+
+msgid "Core Features"
+msgstr "Fonctionnalités Principales"
+
+msgid "Everything you need for"
+msgstr "Tout ce dont vous avez besoin pour"
+
+msgid "financial success"
+msgstr "le succès financier"
+
+msgid "LedgerFlow combines powerful AI technology with intuitive design to deliver comprehensive financial management solutions."
+msgstr "LedgerFlow combine une technologie IA puissante avec un design intuitif pour offrir des solutions complètes de gestion financière."
+
+msgid "AI-Powered Automation"
+msgstr "Automatisation Alimentée par l'IA"
+
+msgid "Intelligent expense categorization and automated approval workflows that learn from your patterns."
+msgstr "Catégorisation intelligente des dépenses et flux d'approbation automatisés qui apprennent de vos habitudes."
+
+msgid "Real-time Analytics"
+msgstr "Analyses en Temps Réel"
+
+msgid "Comprehensive dashboards with predictive insights and customizable reporting tools."
+msgstr "Tableaux de bord complets avec des informations prédictives et des outils de reporting personnalisables."
+
+msgid "Enterprise Security"
+msgstr "Sécurité Entreprise"
+
+msgid "Bank-level encryption with multi-factor authentication and compliance with global standards."
+msgstr "Chiffrement de niveau bancaire avec authentification multi-facteurs et conformité aux normes mondiales."
+
+msgid "Smart Integrations"
+msgstr "Intégrations Intelligentes"
+
+msgid "Seamlessly connect with 200+ business tools and accounting software platforms."
+msgstr "Connectez-vous facilement à plus de 200 outils commerciaux et plateformes logicielles comptables."
+
+msgid "Multi-Currency Support"
+msgstr "Support Multi-Devises"
+
+msgid "Handle global transactions with automatic currency conversion and compliance tracking."
+msgstr "Gérez les transactions mondiales avec conversion automatique de devises et suivi de conformité."
+
+msgid "Mobile Excellence"
+msgstr "Excellence Mobile"
+
+msgid "Full-featured mobile apps with offline capability and instant receipt scanning via OCR."
+msgstr "Applications mobiles complètes avec capacité hors ligne et numérisation instantanée de reçus via OCR."
+
+msgid "Frequently Asked Questions"
+msgstr "Questions Fréquemment Posées"
+
+msgid "Everything you need to know"
+msgstr "Tout ce que vous devez savoir"
+
+msgid "Get answers to common questions about LedgerFlow's features and capabilities."
+msgstr "Obtenez des réponses aux questions courantes sur les fonctionnalités et capacités de LedgerFlow."
+
+msgid "How does LedgerFlow use AI for expense management?"
+msgstr "Comment LedgerFlow utilise-t-il l'IA pour la gestion des dépenses?"
+
+msgid "LedgerFlow uses advanced machine learning algorithms to automatically categorize expenses, detect anomalies, predict spending patterns, and optimize approval workflows. Our AI learns from your organization's behavior to provide increasingly accurate insights over time."
+msgstr "LedgerFlow utilise des algorithmes d'apprentissage automatique avancés pour catégoriser automatiquement les dépenses, détecter les anomalies, prédire les habitudes de dépenses et optimiser les flux d'approbation. Notre IA apprend du comportement de votre organisation pour fournir des informations de plus en plus précises au fil du temps."
+
+msgid "Is my financial data secure with LedgerFlow?"
+msgstr "Mes données financières sont-elles sécurisées avec LedgerFlow?"
+
+msgid "Absolutely. We use bank-level encryption (AES-256), multi-factor authentication, and comply with SOC 2, GDPR, and PCI DSS standards. Your data is stored in secure, geographically distributed data centers with 24/7 monitoring."
+msgstr "Absolument. Nous utilisons un chiffrement de niveau bancaire (AES-256), une authentification multi-facteurs et nous nous conformons aux normes SOC 2, GDPR et PCI DSS. Vos données sont stockées dans des centres de données sécurisés et géographiquement distribués avec surveillance 24h/24 et 7j/7."
+
+msgid "Can LedgerFlow integrate with my existing accounting software?"
+msgstr "LedgerFlow peut-il s'intégrer à mon logiciel comptable existant?"
+
+msgid "Yes! LedgerFlow seamlessly integrates with over 200 business applications including QuickBooks, Xero, SAP, Oracle, Salesforce, and more. Our open API also allows for custom integrations tailored to your specific needs."
+msgstr "Oui! LedgerFlow s'intègre parfaitement avec plus de 200 applications commerciales, y compris QuickBooks, Xero, SAP, Oracle, Salesforce, et plus encore. Notre API ouverte permet également des intégrations personnalisées adaptées à vos besoins spécifiques."
+
+msgid "What support and training do you provide?"
+msgstr "Quel support et formation fournissez-vous?"
+
+msgid "We provide comprehensive onboarding, dedicated customer success managers, live chat support, extensive documentation, video tutorials, and regular training webinars. Enterprise customers receive priority support with guaranteed response times."
+msgstr "Nous fournissons un accompagnement complet, des gestionnaires de succès client dédiés, un support de chat en direct, une documentation complète, des tutoriels vidéo et des webinaires de formation réguliers. Les clients Enterprise reçoivent un support prioritaire avec des temps de réponse garantis."
+
+msgid "Revolutionizing financial management with AI-powered intelligence and enterprise-grade security."
+msgstr "Révolutionner la gestion financière avec l'intelligence alimentée par l'IA et la sécurité de niveau entreprise."
+
+msgid "Product"
+msgstr "Produit"
+
+msgid "Features"
+msgstr "Fonctionnalités"
+
+msgid "Pricing"
+msgstr "Tarifs"
+
+msgid "Integrations"
+msgstr "Intégrations"
+
+msgid "API"
+msgstr "API"
+
+msgid "Company"
+msgstr "Société"
+
+msgid "About"
+msgstr "À Propos"
+
+msgid "Careers"
+msgstr "Carrières"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Privacy Policy"
+msgstr "Politique de Confidentialité"
+
+msgid "All rights reserved."
+msgstr "Tous droits réservés."
+
+msgid "Built with ❤️ for modern businesses"
+msgstr "Conçu avec ❤️ pour les entreprises modernes"
