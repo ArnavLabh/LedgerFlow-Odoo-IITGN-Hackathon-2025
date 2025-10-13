@@ -22,14 +22,50 @@ def create_app(config_class=Config):
     # Babel i18n
     app.config.setdefault('BABEL_DEFAULT_LOCALE', 'en')
     app.config.setdefault('BABEL_SUPPORTED_LOCALES', ['en', 'fr', 'de', 'hi', 'gu'])
-    babel.init_app(app)
-
-    @babel.localeselector
-    def get_locale():
+    def select_locale():
         lang = session.get('lang')
         if lang:
             return lang
         return request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES'])
+
+    # In Flask-Babel >=4, pass the selector function
+    babel.init_app(app, locale_selector=select_locale)
+
+    # Simple server-side translator for hero strings (until .po/.mo are added)
+    HERO_I18N = {
+        'en': {
+            'Get Started': 'Get Started',
+            'Sign In': 'Sign In',
+            'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics': 'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics',
+        },
+        'fr': {
+            'Get Started': 'Commencer',
+            'Sign In': 'Se connecter',
+            'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics': 'Transformez votre gestion des dépenses avec des workflows intelligents, des validations fluides et des analyses puissantes',
+        },
+        'de': {
+            'Get Started': 'Loslegen',
+            'Sign In': 'Anmelden',
+            'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics': 'Optimieren Sie Ihr Spesenmanagement mit intelligenten Workflows, nahtlosen Genehmigungen und leistungsstarken Analysen',
+        },
+        'hi': {
+            'Get Started': 'शुरू करें',
+            'Sign In': 'साइन इन',
+            'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics': 'स्मार्ट वर्कफ़्लो, आसान अनुमोदन और शक्तिशाली विश्लेषिकी के साथ अपना खर्च प्रबंधन बदलें',
+        },
+        'gu': {
+            'Get Started': 'શરૂ કરો',
+            'Sign In': 'લૉગ ઇન',
+            'Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics': 'સ્માર્ટ વર્કફ્લો, સરળ મંજૂરીઓ અને શક્તિશાળી વિશ્લેષણ સાથે તમારું ખર્ચ મેનેજમેન્ટ બદલો',
+        },
+    }
+
+    @app.context_processor
+    def inject_translator():
+        def _(msgid: str) -> str:
+            lang = session.get('lang') or request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES']) or 'en'
+            return HERO_I18N.get(lang, {}).get(msgid, msgid)
+        return dict(_=_)
     
     # Register blueprints
     from app.routes.auth_routes import auth_bp
