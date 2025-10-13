@@ -6,7 +6,13 @@ from app.approval_engine import ApprovalEngine
 from datetime import datetime
 import os
 import re
-from werkzeug.utils import secure_filename
+
+# Simple filename sanitizer to avoid using werkzeug
+def simple_secure_filename(filename: str) -> str:
+    base = os.path.basename(filename or '')
+    name, ext = os.path.splitext(base)
+    safe = re.sub(r'[^A-Za-z0-9_.-]+', '_', name)[:100] or 'upload'
+    return safe + ext.lower()
 
 try:
     import pytesseract
@@ -238,7 +244,7 @@ def ocr_receipt(current_user):
     uploads_dir = os.path.join('uploads', 'receipts')
     os.makedirs(uploads_dir, exist_ok=True)
 
-    filename = secure_filename(file.filename)
+    filename = simple_secure_filename(file.filename)
     path = os.path.join(uploads_dir, filename)
     file.save(path)
 
