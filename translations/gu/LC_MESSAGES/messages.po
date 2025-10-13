@@ -1,0 +1,41 @@
+# Gujarati translations for LedgerFlow
+msgid ""
+msgstr ""
+"Project-Id-Version: LedgerFlow 1.0\n"
+"POT-Creation-Date: 2025-01-13 17:00+0000\n"
+"PO-Revision-Date: 2025-01-13 17:00+0000\n"
+"Last-Translator: LedgerFlow Team\n"
+"Language: gu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Get Started"
+msgstr "શરૂ કરો"
+
+msgid "Sign In"
+msgstr "સાઇન ઇન"
+
+msgid "Enterprise-Grade Financial Intelligence"
+msgstr "એન્ટરપ્રાઇઝ-ગ્રેડ નાણાકીય બુદ્ધિમત્તા"
+
+msgid "Transform"
+msgstr "પરિવર્તન કરો"
+
+msgid "Finance"
+msgstr "નાણાં"
+
+msgid "with AI-Powered Precision"
+msgstr "AI-સંચાલિત ચોકસાઈ સાથે"
+
+msgid "Elevate your financial operations with LedgerFlow's intelligent expense management platform. Harness real-time analytics, automated workflows, and predictive insights to drive strategic decision-making."
+msgstr "LedgerFlow ના બુદ્ધિશાળી ખર્ચ વ્યવસ્થાપન પ્લેટફોર્મ સાથે તમારી નાણાકીય કામગીરીને ઉન્નત કરો। વ્યૂહાત્મક નિર્ણય લેવા માટે રીયલ-ટાઇમ વિશ્લેષણ, સ્વચાલિત વર્કફ્લો અને ભવિષ્યવાણી સંબંધી આંતરદૃષ્ટિનો ઉપયોગ કરો।"
+
+msgid "Intelligent Expense Orchestration"
+msgstr "બુદ્ધિશાળી ખર્ચ આયોજન"
+
+msgid "Revolutionize Financial Control with LedgerFlow"
+msgstr "LedgerFlow સાથે નાણાકીય નિયંત્રણમાં ક્રાંતિ લાવો"
+
+msgid "Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control."
+msgstr "ખર્ચ વ્યવસ્થાપનના ભવિષ્યનો અનુભવ કરો। LedgerFlow અજોડ નાણાકીય દૃશ્યતા અને નિયંત્રણ પ્રદાન કરવા માટે AI-સંચાલિત ઓટોમેશનને એન્ટરપ્રાઇઝ-ગ્રેડ સુરક્ષા સાથે જોડે છે।"

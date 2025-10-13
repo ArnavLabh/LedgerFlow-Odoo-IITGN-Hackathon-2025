@@ -1,0 +1,41 @@
+# French translations for LedgerFlow
+msgid ""
+msgstr ""
+"Project-Id-Version: LedgerFlow 1.0\n"
+"POT-Creation-Date: 2025-01-13 17:00+0000\n"
+"PO-Revision-Date: 2025-01-13 17:00+0000\n"
+"Last-Translator: LedgerFlow Team\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Get Started"
+msgstr "Commencer"
+
+msgid "Sign In"
+msgstr "Se Connecter"
+
+msgid "Enterprise-Grade Financial Intelligence"
+msgstr "Intelligence Financière de Niveau Entreprise"
+
+msgid "Transform"
+msgstr "Transformez"
+
+msgid "Finance"
+msgstr "la Finance"
+
+msgid "with AI-Powered Precision"
+msgstr "avec Précision Alimentée par l'IA"
+
+msgid "Elevate your financial operations with LedgerFlow's intelligent expense management platform. Harness real-time analytics, automated workflows, and predictive insights to drive strategic decision-making."
+msgstr "Élevez vos opérations financières avec la plateforme intelligente de gestion des dépenses de LedgerFlow. Exploitez les analyses en temps réel, les flux de travail automatisés et les informations prédictives pour guider la prise de décision stratégique."
+
+msgid "Intelligent Expense Orchestration"
+msgstr "Orchestration Intelligente des Dépenses"
+
+msgid "Revolutionize Financial Control with LedgerFlow"
+msgstr "Révolutionnez le Contrôle Financier avec LedgerFlow"
+
+msgid "Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control."
+msgstr "Découvrez l'avenir de la gestion des dépenses. LedgerFlow combine l'automatisation pilotée par l'IA avec une sécurité de niveau entreprise pour offrir une visibilité et un contrôle financiers sans précédent."

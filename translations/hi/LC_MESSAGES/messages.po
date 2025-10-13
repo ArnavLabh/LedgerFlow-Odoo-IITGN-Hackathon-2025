@@ -1,0 +1,41 @@
+# Hindi translations for LedgerFlow
+msgid ""
+msgstr ""
+"Project-Id-Version: LedgerFlow 1.0\n"
+"POT-Creation-Date: 2025-01-13 17:00+0000\n"
+"PO-Revision-Date: 2025-01-13 17:00+0000\n"
+"Last-Translator: LedgerFlow Team\n"
+"Language: hi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Get Started"
+msgstr "शुरू करें"
+
+msgid "Sign In"
+msgstr "साइन इन करें"
+
+msgid "Enterprise-Grade Financial Intelligence"
+msgstr "उद्यम-स्तरीय वित्तीय बुद्धिमत्ता"
+
+msgid "Transform"
+msgstr "रूपांतरित करें"
+
+msgid "Finance"
+msgstr "वित्त"
+
+msgid "with AI-Powered Precision"
+msgstr "AI-संचालित सटीकता के साथ"
+
+msgid "Elevate your financial operations with LedgerFlow's intelligent expense management platform. Harness real-time analytics, automated workflows, and predictive insights to drive strategic decision-making."
+msgstr "LedgerFlow के बुद्धिमान व्यय प्रबंधन प्लेटफॉर्म के साथ अपने वित्तीय संचालन को उन्नत करें। रणनीतिक निर्णय लेने के लिए वास्तविक समय विश्लेषण, स्वचालित वर्कफ़्लो और भविष्यवाणी अंतर्दृष्टि का उपयोग करें।"
+
+msgid "Intelligent Expense Orchestration"
+msgstr "बुद्धिमान व्यय आयोजन"
+
+msgid "Revolutionize Financial Control with LedgerFlow"
+msgstr "LedgerFlow के साथ वित्तीय नियंत्रण में क्रांति लाएं"
+
+msgid "Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control."
+msgstr "व्यय प्रबंधन के भविष्य का अनुभव करें। LedgerFlow अद्वितीय वित्तीय दृश्यता और नियंत्रण प्रदान करने के लिए AI-संचालित स्वचालन को उद्यम-स्तर की सुरक्षा के साथ जोड़ता है।"

@@ -9,6 +9,80 @@
     
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            font-family: 'Poppins', sans-serif !important;
+        }
+        
+        /* Glassmorphic and liquid glass effects inspired by iOS 16+ */
+        .glassmorphic {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .glassmorphic-dark {
+            background: rgba(28, 36, 59, 0.4);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        /* Liquid glass animation effect */
+        @keyframes liquidGlass {
+            0%, 100% { 
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+            }
+            50% { 
+                backdrop-filter: blur(25px) saturate(200%);
+                -webkit-backdrop-filter: blur(25px) saturate(200%);
+            }
+        }
+        
+        .liquid-glass {
+            animation: liquidGlass 4s ease-in-out infinite;
+        }
+        
+        /* FAQ Animation Styles */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .faq-answer {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .faq-answer:not(.hidden) {
+            animation: fadeInDown 0.3s ease-in-out;
+        }
+        
+        .faq-toggle svg {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Enhanced dark mode text readability */
+        [data-theme="dark"] .text-gray-600 {
+            color: #9ca3af !important;
+        }
+        
+        [data-theme="dark"] .text-gray-700 {
+            color: #d1d5db !important;
+        }
+        
+        [data-theme="dark"] .text-gray-900 {
+            color: #f3f4f6 !important;
+        }
+        
         /*
          * CORE THEME STYLES (Using CSS variables for dynamic switching)
          */
@@ -542,7 +616,6 @@
             </div>
 
             <div class="hidden lg:flex items-center space-x-6">
-<a href="#feedback" class="nav-link transition duration-150 font-medium">Testimonials</a>
                 
                 <button id="theme-toggle-desktop" class="p-2 rounded-full nav-icon hover:bg-white/10 transition duration-150" aria-label="Toggle Theme">
                     <svg id="sun-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -556,11 +629,11 @@
                     </button>
                     
                     <div class="absolute right-0 mt-3 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform scale-95 group-hover:scale-100 z-50">
-                        <a href="#" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">English</a>
-                        <a href="#" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">Spanish</a>
-                        <a href="#" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">French</a>
-                        <a href="#" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">German</a>
-                        <a href="#" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">Hindi</a>
+                        <a href="#" onclick="setLanguage('en')" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">English</a>
+                        <a href="#" onclick="setLanguage('fr')" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">Français</a>
+                        <a href="#" onclick="setLanguage('de')" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">Deutsch</a>
+                        <a href="#" onclick="setLanguage('hi')" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">हिंदी</a>
+                        <a href="#" onclick="setLanguage('gu')" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg">ગુજરાતી</a>
                     </div>
                 </div>
 
@@ -580,7 +653,6 @@
         
         <div id="mobile-menu" class="hidden lg:hidden mobile-menu-bg shadow-inner py-4">
             <div class="flex flex-col space-y-3 px-6 pb-2">
-<a href="#feedback" class="text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-300 transition duration-150 font-medium">Testimonials</a>
                 
                 <button id="theme-toggle-mobile" class="flex items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-300 transition duration-150 font-medium focus:outline-none w-full justify-start p-2 rounded-lg hover:bg-white/10 dark:hover:bg-black/10">
                     <span class="mr-3">Toggle Theme</span>
@@ -595,11 +667,11 @@
                     </button>
                     
                     <div id="mobile-language-menu" class="hidden mt-2 ml-4 space-y-1">
-                        <a href="#" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">English</a>
-                        <a href="#" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">Spanish</a>
-                        <a href="#" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">French</a>
-                        <a href="#" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">German</a>
-                        <a href="#" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">Hindi</a>
+                        <a href="#" onclick="setLanguage('en')" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">English</a>
+                        <a href="#" onclick="setLanguage('fr')" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">Français</a>
+                        <a href="#" onclick="setLanguage('de')" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">Deutsch</a>
+                        <a href="#" onclick="setLanguage('hi')" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">हिंदी</a>
+                        <a href="#" onclick="setLanguage('gu')" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-white/10 rounded">ગુજરાતી</a>
                     </div>
                 </div>
 
@@ -639,16 +711,15 @@
                 
                 <div class="text-center lg:text-left">
                     <h2 class="text-base font-semibold uppercase tracking-wider text-blue-500 dark:text-blue-300 mb-2">
-                        LedgerFlow: The Future of Finance
+                        {{ _('Enterprise-Grade Financial Intelligence') }}
                     </h2>
-                    <!-- FIX APPLIED: Added ID for CSS Override and explicit light-mode text color. Removed dark:text-white class here, relying on CSS for superior specificity. -->
                     <h1 id="hero-main-title" class="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6 text-gray-900">
-                        <span class="">Unlock</span> 
-                        <span class="text-blue-800 dark:text-blue-400 drop-shadow-lg">Intelligent</span> 
-                        <span class="">Financial Growth.</span>
+                        <span class="">{{ _('Transform') }}</span> 
+                        <span class="text-blue-800 dark:text-blue-400 drop-shadow-lg">{{ _('Finance') }}</span> 
+                        <span class="">{{ _('with AI-Powered Precision') }}</span>
                     </h1>
                     <p class="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-lg mx-auto lg:mx-0 font-light">
-{{ _('Transform your expense management with intelligent workflows, seamless approvals, and powerful analytics') }}
+                        {{ _('Elevate your financial operations with LedgerFlow\'s intelligent expense management platform. Harness real-time analytics, automated workflows, and predictive insights to drive strategic decision-making.') }}
                     </p>
 
                     
@@ -830,6 +901,8 @@
             </div>
         </div>
     </section>
+    
+    <!-- Smart Expense Management Section -->
     <section class="expensio-section" style="
     background-color: #0A1937; /* Primary Dark Blue */
     padding: 80px 20px;
@@ -1127,10 +1200,10 @@
 
     <div class="expensio-container">
         <div class="expensio-content-left">
-            <p class="tagline">Smart Expense Management</p>
-            <h1>Streamline Your Company's Expenses with Expensio</h1>
+            <p class="tagline">{{ _('Intelligent Expense Orchestration') }}</p>
+            <h1>{{ _('Revolutionize Financial Control with LedgerFlow') }}</h1>
             <p class="description">
-                Say goodbye to manual spreadsheets and lost receipts. **Expensio** automates your entire expense reporting and approval process.
+                {{ _('Experience the future of expense management. LedgerFlow combines AI-driven automation with enterprise-grade security to deliver unparalleled financial visibility and control.') }}
             </p>
 
             <div class="features-grid">
@@ -1373,7 +1446,7 @@
 
             <!-- Bottom Row: Social & Copyright -->
             <div class="flex flex-col md:flex-row justify-between items-center text-sm text-white/60">
-                <p>&copy; 2024 LedgerFlow, Inc. All rights reserved.</p>
+                <p>&copy; 2025 LedgerFlow, Inc. All rights reserved.</p>
                 
                 <div class="flex space-x-4 mt-4 md:mt-0">
                     <a href="#" aria-label="LedgerFlow on Twitter" class="hover:text-blue-200 transition">
@@ -1567,6 +1640,27 @@
                 }
             });
         });
+        
+        // Language switching function
+        function setLanguage(lang) {
+            fetch('/set_language', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ language: lang })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to apply the new language
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error setting language:', error));
+            
+            return false; // Prevent default link behavior
+        }
 
     </script>
 
